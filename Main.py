@@ -1,11 +1,10 @@
 import numpy as np
 from pyswarm import pso
-
-
 # Group 14 - Logistical optomisation problem
-# Step 1. Import order list from CSV into an array
 
 
+
+# Step 1. Import delivery order list from CSV into an array
 
 
 
@@ -19,7 +18,7 @@ def weight(x, *args):
     return rho*2*np.pi*d*t*np.sqrt((B/2)**2 + H**2)
 
 # Step 3: Define contraints
-# For our project the constraint functions will be volume of orders and weight of orders
+# For our project the constraint functions will be volume of orders and weight of orders per truck
 def yield_stress(x, *args):
     H, d, t = x
     B, rho, E, P = args
