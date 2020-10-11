@@ -1,17 +1,20 @@
 import numpy as np
 from pyswarm import pso
-import Order as order
+from Order import Order
 import csv
 import googlemaps as maps
 # Group 14 - Logistical optomisation problem
 
 
-
 # Step 1. Import delivery order list from CSV into an array
+orders = []
+with open('datafile.csv', newline='') as csvfile:
+    orderlist = csv.reader(csvfile, delimiter=',')
+    for row in orderlist:
+        order = Order(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8], row[9])
+        orders.append(order)
 
-
-
-
+print(len(orders))
 
 # Step 2: Define the objective function
 # We will use distance as the main factor for lowering emission output

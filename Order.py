@@ -1,14 +1,15 @@
 class Order:
-    def __init__(self):
-        self._orderedDate = None
-        self._fromSuburb = None
-        self._fromState = None
-        self._toSuburb = None
-        self._toState = None
-        self._toPCode = None
-        self._itemQty = None
-        self._volume = None
-        self._weight = None
+    def __init__(self, ordered_date="", from_suburb="",from_state="", from_pcode ="", to_suburb="" , to_state="", to_pcode="", item_qty="", volume="", weight=""):
+        self._orderedDate = ordered_date
+        self._fromSuburb = from_suburb
+        self._fromState = from_state
+        self._fromPCode = from_pcode
+        self._toSuburb = to_suburb
+        self._toState = to_state
+        self._toPCode = to_pcode
+        self._itemQty = item_qty
+        self._volume = volume
+        self._weight = weight
 
     @property
     def ordered_date(self):
@@ -33,6 +34,14 @@ class Order:
     @from_state.setter
     def from_state(self, value):
         self._fromState = value
+
+    @property
+    def from_pcode(self):
+        return self._fromPCode
+
+    @from_pcode.setter
+    def from_pcode(self, value):
+        self._fromPcode = value
 
     @property
     def to_suburb(self):
