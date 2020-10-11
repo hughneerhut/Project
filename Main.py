@@ -1,15 +1,45 @@
+import numpy as np
 from pyswarm import pso
 
-def test(x):
-    x1 = x[0]
-    x2 = x[1]
-    return 100*(x1 - (x2)**2)**2 + (x2 - 1)**2
+# Define the objective (to be minimize)
+def weight(x, *args):
+    H, d, t = x
+    B, rho, E, P = args
+    return rho*2*np.pi*d*t*np.sqrt((B/2)**2 + H**2)
 
+# Setup the constraint functions
+def yield_stress(x, *args):
+    H, d, t = x
+    B, rho, E, P = args
+    return (P*np.sqrt((B/2)**2 + H**2))/(2*t*np.pi*d*H)
 
-lb = [0, 0]
-ub = [15, 30]
+def buckling_stress(x, *args):
+    H, d, t = x
+    B, rho, E, P = args
+    return (np.pi**2*E*(d**2 + t**2))/(8*((B/2)**2 + H**2))
 
-xopt, fopt = pso(test, lb, ub)
+def deflection(x, *args):
+    H, d, t = x
+    B, rho, E, P = args
+    return (P*np.sqrt((B/2)**2 + H**2)**3)/(2*t*np.pi*d*H**2*E)
 
+def constraints(x, *args):
+    strs = yield_stress(x, *args)
+    buck = buckling_stress(x, *args)
+    defl = deflection(x, *args)
+    return [100 - strs, buck - strs, 0.25 - defl]
+
+# Define the other parameters
+B = 60  # inches
+rho = 0.3  # lb/in^3
+E = 30000  # kpsi (1000-psi)
+P = 66  # kip (1000-lbs, force)
+args = (B, rho, E, P)
+
+# Define the lower and upper bounds for H, d, t, respectively
+lb = [10, 1, 0.01]
+ub = [30, 3, 0.25]
+
+xopt, fopt = pso(weight, lb, ub, f_ieqcons=constraints, args=args)
 print(xopt)
 print(fopt)
