@@ -3,7 +3,7 @@ from pyswarm import pso
 from Order import Order
 import csv
 import googlemaps as maps
-# Group 14 - Logistical optomisation problem
+# Group 14 - Logistical optimisation problem
 
 
 # Step 1. Import delivery order list from CSV into an array
@@ -14,8 +14,8 @@ with open('datafile.csv', newline='') as csvfile:
         order = Order(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8], row[9])
         orders.append(order)
 
-print(len(orders))
-
+total_orders = len(orders)
+print('Total orders: ', total_orders)
 # Step 2: Define the objective function
 # We will use distance as the main factor for lowering emission output
 def weight(x, *args):

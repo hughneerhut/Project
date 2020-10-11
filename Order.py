@@ -91,8 +91,3 @@ class Order:
     def weight(self, value):
         self._weight = value
 
-
-#c = C()
-#c.x = 'foo'  # setter called
-#foo = c.x    # getter called
-#del c.x      # deleter called
