@@ -1,8 +1,11 @@
 import numpy as np
 from pyswarm import pso
 from Order import Order
+import random
 import csv
 import googlemaps as maps
+
+
 # Group 14 - Logistical optimisation problem
 
 
@@ -14,10 +17,17 @@ with open('datafile.csv', newline='') as csvfile:
         order = Order(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8], row[9])
         orders.append(order)
 
-total_orders = len(orders)
+total_orders = len(orders) #total number of order
+no_trucks = 40 #total number of trucks
+
+#initialise random
+for i in orders:
+    i.rand_init = round(random.uniform(0,1) * no_trucks)
+
 print('Total orders: ', total_orders)
 # Step 2: Define the objective function
 # We will use distance as the main factor for lowering emission output
+
 def weight(x, *args):
     H, d, t = x
     B, rho, E, P = args
