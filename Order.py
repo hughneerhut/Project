@@ -1,5 +1,6 @@
 class Order:
-    def __init__(self, ordered_date="", from_suburb="",from_state="", from_pcode ="", to_suburb="" , to_state="", to_pcode="", item_qty="", volume="", weight=""):
+    def __init__(self, order_num = "", ordered_date="", from_suburb="",from_state="", from_pcode ="", to_suburb="" , to_state="", to_pcode="", item_qty="", volume="", weight=""):
+        self._orderNum = order_num
         self._orderedDate = ordered_date
         self._fromSuburb = from_suburb
         self._fromState = from_state
@@ -11,6 +12,10 @@ class Order:
         self._volume = volume
         self._weight = weight
         self._randInit = ""
+
+    @property
+    def order_num(self):
+        return self._orderNum
 
     @property
     def ordered_date(self):
