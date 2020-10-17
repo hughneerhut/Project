@@ -17,6 +17,22 @@ class Dashboard extends React.Component {
           <DataCard title = "This Month" data = "3,000kg" icon = "fa-tree" color = "info"/>
           <DataCard title = "This Year" data = "32,000kg" icon = "fa-tree" color = "info"/>
         </ContentCard>
+
+        <ContentCard title = "Todays Delivery Progress">
+          <div class="col-xl-12 col-md-6 mb-1">
+            <div class="card shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col-xl-12">
+                    <div class = "progress">
+                      <div class="progress-bar bg-success" role="progressbar" style={{width: "50%"}} aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ContentCard>
       </View>
     );
   }
