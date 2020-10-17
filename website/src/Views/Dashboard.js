@@ -19,13 +19,13 @@ class Dashboard extends React.Component {
         </ContentCard>
 
         <ContentCard title = "Todays Delivery Progress">
-          <div class="col-xl-12 col-md-6 mb-1">
-            <div class="card shadow h-100 py-2">
-              <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                  <div class="col-xl-12">
-                    <div class = "progress">
-                      <div class="progress-bar bg-success" role="progressbar" style={{width: "50%"}} aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50%</div>
+          <div className = "col-xl-12 col-md-6 mb-1">
+            <div className = "card shadow h-100 py-2">
+              <div className = "card-body">
+                <div className = "row no-gutters align-items-center">
+                  <div className = "col-xl-12">
+                    <div className = "progress">
+                      <div className = "progress-bar bg-success" role="progressbar" style={{width: "50%"}} aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50%</div>
                     </div>
                   </div>
                 </div>
@@ -33,6 +33,13 @@ class Dashboard extends React.Component {
             </div>
           </div>
         </ContentCard>
+
+        <ContentCard title = "Annual Deliveries Overview">
+          <div className = "chart-area">
+            <canvas id="deliveriesChart"></canvas>
+          </div>
+        </ContentCard>
+        
       </View>
     );
   }
@@ -45,15 +52,15 @@ class Dashboard extends React.Component {
 class DataCard extends React.Component{
   render(){
     return(
-      <div class="col-xl-4 col-md-6 mb-1">
+      <div className = "col-xl-4 col-md-6 mb-1">
         <div class={"card border-left-" + this.props.color + " shadow h-100 py-2"}>
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
+          <div className = "card-body">
+            <div className = "row no-gutters align-items-center">
+              <div className = "col mr-2">
                 <div class={"text-xs font-weight-bold text-"+ this.props.color +" text-uppercase mb-1"}>{this.props.title}</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800 text-center">{this.props.data}</div>
+                <div className = "h5 mb-0 font-weight-bold text-gray-800 text-center">{this.props.data}</div>
               </div>
-              <div class="col-auto">
+              <div className = "col-auto">
                 <i class={"fas "+this.props.icon+" fa-2x text-gray-300"}></i>
               </div>
             </div>
