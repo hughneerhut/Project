@@ -33,12 +33,6 @@ class Dashboard extends React.Component {
             </div>
           </div>
         </ContentCard>
-
-        <ContentCard title = "Annual Deliveries Overview">
-          <div className = "chart-area">
-            <canvas id="deliveriesChart"></canvas>
-          </div>
-        </ContentCard>
         
       </View>
     );
