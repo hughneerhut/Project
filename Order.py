@@ -11,7 +11,6 @@ class Order:
         self._itemQty = item_qty
         self._volume = volume
         self._weight = weight
-        self._randInit = ""
 
     @property
     def order_num(self):
@@ -96,12 +95,4 @@ class Order:
     @weight.setter
     def weight(self, value):
         self._weight = value
-
-    @property
-    def rand_init(self):
-        return self._randInit
-
-    @rand_init.setter
-    def rand_init(self, value):
-        self._randInit = value
 
