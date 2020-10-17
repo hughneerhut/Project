@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from "react-router-dom";
+import { Link, useLocation} from "react-router-dom";
 
 class Navigation extends React.Component {
   render() {
@@ -22,8 +22,7 @@ class Sidebar extends React.Component{
         </a>
         {/* End Sidebar heading */}
         <hr className = "sidebar-divider my-0"/>
-        
-        <NavItem link = "/" name = "Dashboard" icon = "fa-tachometer-alt" active/>
+        <NavItem link = "/" name = "Dashboard" icon = "fa-tachometer-alt" />
 
         <NavItem link = "/orders" name = "Orders" icon = "fa-table"/>
         
@@ -35,7 +34,7 @@ class Sidebar extends React.Component{
 class NavItem extends React.Component{
   render(){
     return(
-      <li className = {"nav-item " + (this.props.active ? "active" : "")}>
+      <li className = {"nav-item " + (window.location.pathname == this.props.link ? "active" : "")}>
         <Link className = "nav-link" to = {this.props.link}>
           <i className = {"fas fa-fw " + this.props.icon}></i>
           <span> {this.props.name}</span>

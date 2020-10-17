@@ -6,10 +6,7 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
-        <div id = "wrapper">
-          <Navigation/>
-          <Main/>
-        </div>
+        <Main/>
       </div>
     );
   }

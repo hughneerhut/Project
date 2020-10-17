@@ -1,13 +1,45 @@
 import React from 'react';
+import View from '../Components/View';
+import ContentCard from '../Components/ContentCard';
 
 class Dashboard extends React.Component {
   render() {
     return (
-      <div id="content-wrapper" class="d-flex flex-column">
-        <div id = "content">
-          <div class = "container-fluid mt-4">
-            <div class="d-sm-flex align-items-center justify-content-between mb-4">
-              <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+      <View title = "Dashboard">
+        <ContentCard title = "Delivery Stats">
+          <DataCard title = "Today" data = "12" icon = "fa-truck" color = "primary"/>
+          <DataCard title = "This Month" data = "300" icon = "fa-truck" color = "primary"/>
+          <DataCard title = "This Year" data = "3600" icon = "fa-truck" color = "primary"/>
+        </ContentCard>
+
+        <ContentCard title = "Carbon Emission Stats">
+          <DataCard title = "Today" data = "100kg" icon = "fa-tree" color = "info"/>
+          <DataCard title = "This Month" data = "3,000kg" icon = "fa-tree" color = "info"/>
+          <DataCard title = "This Year" data = "32,000kg" icon = "fa-tree" color = "info"/>
+        </ContentCard>
+      </View>
+    );
+  }
+}
+
+/*
+  Small data cards
+  takes title, data, icon and border color.
+*/
+class DataCard extends React.Component{
+  render(){
+    return(
+      <div class="col-xl-4 col-md-6 mb-1">
+        <div class={"card border-left-" + this.props.color + " shadow h-100 py-2"}>
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class={"text-xs font-weight-bold text-"+ this.props.color +" text-uppercase mb-1"}>{this.props.title}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800 text-center">{this.props.data}</div>
+              </div>
+              <div class="col-auto">
+                <i class={"fas "+this.props.icon+" fa-2x text-gray-300"}></i>
+              </div>
             </div>
           </div>
         </div>
@@ -15,5 +47,4 @@ class Dashboard extends React.Component {
     );
   }
 }
-
 export default Dashboard;
