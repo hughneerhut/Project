@@ -1,12 +1,15 @@
 import React from 'react';
-import './App.css';
-import Header from './Header.js';
+import Navigation from './Components/Navigation.js';
+import Main from './Main';
 
 class App extends React.Component {
   render() {
     return (
       <div className="App">
-        <Header/>
+        <div id = "wrapper">
+          <Navigation/>
+          <Main/>
+        </div>
       </div>
     );
   }
