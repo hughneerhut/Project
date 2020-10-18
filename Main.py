@@ -41,6 +41,8 @@ current_time = pd.to_datetime("03/05/2020 08:00", dayfirst=True)
 origins = []
 destinations = []
 processed_orders = []
+new_orders = []
+cycles = 1
 
 def optimise():
     global current_time
@@ -52,6 +54,7 @@ def optimise():
         if (order_datetime - current_time).seconds < 600 and (order_datetime - current_time).days == 0:
             new_orders.append(o)
             processed_orders.append(o)
+            new_orders.append(o)
             print(o.order_num)
             #Add records to DB
             sql = "INSERT INTO system_state (src, des, order_ID) VALUES (%s, %s, %s)"
@@ -90,27 +93,30 @@ def optimise():
                         cursor.execute(sql, val)
                         combo = row + col
                         db.commit()
-                        sql = "SHOW TABLE STATUS LIKE {}".format("'"+combo+"'")
-                        cursor.execute(sql)
-                        #create new table for each combo if it doesnt already exist
-                        if not cursor.fetchall():
-                            combos.append(combo)
-                            sql = "CREATE TABLE {} (order_id VARCHAR(10), weight FLOAT, volume FLOAT, qty INT)".format(combo)
-                            print("Added table: "+combo)
+                        if o in new_orders:
+                            sql = "SHOW TABLE STATUS LIKE {}".format("'"+combo+"'")
                             cursor.execute(sql)
-                            db.commit()
-                        # clear table on first iteration
-                        if count == 1:
-                            sql = "TRUNCATE TABLE {}".format(combo)
-                            print("Cleared table: " + combo)
-                            cursor.execute(sql)
-                        sql = "INSERT INTO {} (order_id, weight, volume, qty) VALUES (%s, %s, %s, %s)".format(combo)
-                        val = ("'"+ o.order_num + "'", o.weight, o.volume, o.item_qty)
-                        cursor.execute(sql, val)
+                            #create new table for each combo if it doesnt already exist
+                            if not cursor.fetchall():
+                                combos.append(combo)
+                                sql = "CREATE TABLE {} (order_id VARCHAR(10), weight FLOAT, volume FLOAT, qty INT)".format(combo)
+                                print("Added table: "+combo)
+                                cursor.execute(sql)
+                                db.commit()
+                            # clear table on first iteration
+                            if cycles == 1:
+                                sql = "TRUNCATE TABLE {}".format(combo)
+                                print("Cleared table: " + combo)
+                                cursor.execute(sql)
+                            sql = "INSERT INTO {} (order_id, weight, volume, qty) VALUES (%s, %s, %s, %s)".format(combo)
+                            val = ("'"+ o.order_num + "'", o.weight, o.volume, o.item_qty)
+                            cursor.execute(sql, val)
     current_time = current_time + pd.Timedelta(seconds=600)
+    new_orders.clear()
 
 #optimise is running at every 10 seconds for troubleshooting purposes
-schedule.every(10).seconds.do(optimise)
+schedule.every(1).seconds.do(optimise)
+cycles = cycles + 1
 
 while 1:
     schedule.run_pending()
