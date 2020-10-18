@@ -71,8 +71,8 @@ def optimise():
             if o.from_pcode not in origins:
                 origins.append(o.from_pcode)
 
-    #Fill matrix table
-    cursor.execute("TRUNCATE TABLE src_des_matrix")
+    #Fill matrix and delivery tables
+    cursor.execute("TRUNCATE TABLE src_des_matrix") #reset matrix table
     for src in origins:
         row = "o" + src
         sql = "INSERT INTO src_des_matrix (src) VALUES ('{}')".format(row)
@@ -103,11 +103,12 @@ def optimise():
                                 print("Added table: "+combo)
                                 cursor.execute(sql)
                                 db.commit()
-                            # clear table on first iteration
-                            if cycles == 1:
-                                sql = "TRUNCATE TABLE {}".format(combo)
-                                print("Cleared table: " + combo)
-                                cursor.execute(sql)
+                            else:
+                                if count == 1 :
+                                    sql = "TRUNCATE TABLE {}".format(combo)
+                                    print("Cleared table: " + combo)
+                                    cursor.execute(sql)
+
                             sql = "INSERT INTO {} (order_id, weight, volume, qty) VALUES (%s, %s, %s, %s)".format(combo)
                             val = ("'"+ o.order_num + "'", o.weight, o.volume, o.item_qty)
                             cursor.execute(sql, val)
