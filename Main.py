@@ -75,21 +75,38 @@ def optimise():
         sql = "INSERT INTO src_des_matrix (src) VALUES ('{}')".format(row)
         cursor.execute(sql)
         db.commit()
-        for o in processed_orders:
-            if o.from_pcode == src:
-                for des in destinations:
+        for des in destinations:
+            count = 0
+            shared = []
+            for o in processed_orders:
+                combos = []
+                if o.from_pcode == src:
                     if o.to_pcode == des:
+                        shared.append(o)
+                        count = count + 1
                         col = "d" + des
                         sql = "UPDATE src_des_matrix SET {}=%s WHERE src=%s".format(col)
                         val = (1, row)
                         cursor.execute(sql, val)
-                        print(col + row)
+                        combo = row + col
                         db.commit()
-
-
-
-
-
+                        sql = "SHOW TABLE STATUS LIKE {}".format("'"+combo+"'")
+                        cursor.execute(sql)
+                        #create new table for each combo if it doesnt already exist
+                        if not cursor.fetchall():
+                            combos.append(combo)
+                            sql = "CREATE TABLE {} (order_id VARCHAR(10), weight FLOAT, volume FLOAT, qty INT)".format(combo)
+                            print("Added table: "+combo)
+                            cursor.execute(sql)
+                            db.commit()
+                        # clear table on first iteration
+                        if count == 1:
+                            sql = "TRUNCATE TABLE {}".format(combo)
+                            print("Cleared table: " + combo)
+                            cursor.execute(sql)
+                        sql = "INSERT INTO {} (order_id, weight, volume, qty) VALUES (%s, %s, %s, %s)".format(combo)
+                        val = ("'"+ o.order_num + "'", o.weight, o.volume, o.item_qty)
+                        cursor.execute(sql, val)
     current_time = current_time + pd.Timedelta(seconds=600)
 
 #optimise is running at every 10 seconds for troubleshooting purposes
