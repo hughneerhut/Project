@@ -1,5 +1,5 @@
 class Order:
-    def __init__(self, order_num = "", ordered_date="", from_suburb="",from_state="", from_pcode ="", to_suburb="" , to_state="", to_pcode="", item_qty="", volume="", weight=""):
+    def __init__(self, order_num = "", ordered_date="", from_suburb="",from_state="", from_pcode ="", to_suburb="" , to_state="", to_pcode="", item_qty="", weight="", volume=""):
         self._orderNum = order_num
         self._orderedDate = ordered_date
         self._fromSuburb = from_suburb

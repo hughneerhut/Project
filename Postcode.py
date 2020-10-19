@@ -1,5 +1,5 @@
 class Postcode:
-    def __int__(self, postcode, long, lat):
+    def __init__(self, postcode="", long="", lat=""):
         self._postcode = postcode
         self._long = long
         self._lat = lat
