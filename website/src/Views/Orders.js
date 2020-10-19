@@ -3,6 +3,20 @@ import View from '../Components/View';
 import ContentCard from '../Components/ContentCard';
 
 class Orders extends React.Component {
+
+  loadScript(src){
+    const script = document.createElement("script");    
+    script.async = true;    
+    script.src = src;    
+    document.body.appendChild(script);  
+  }
+
+  componentDidMount(){
+    this.loadScript("vendor/datatables/jquery.dataTables.min.js");
+    this.loadScript("vendor/datatables/dataTables.bootstrap4.min.js");
+    this.loadScript("js/demo/datatables-demo.js");
+  }
+
   render() {
     return (
       <View title = "Orders">
@@ -48,6 +62,7 @@ class Orders extends React.Component {
         </ContentCard>
 
       </View>
+      
     );
   }
 }
