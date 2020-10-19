@@ -1,6 +1,6 @@
 from Order import Order
 from Postcode import Postcode
-from Shipment import Shipment
+from Truck import Truck
 import csv
 import schedule
 import pandas as pd
@@ -25,7 +25,7 @@ db.commit()
 # Step 1. Import delivery order list from CSV into an array
 orders = []
 postcodes = []
-shipments = []
+trucks = []
 
 with open('datafile.csv', newline='') as csvfile:
     orderlist = csv.reader(csvfile, delimiter=',')
@@ -69,7 +69,7 @@ def optimise():
             new_orders.append(o)
             processed_orders.append(o)
 
-            print(o.order_num)
+            print(o.order_num + " - Source: " + str(o.from_pcode) + ". Destination: " + str(o.to_pcode))
             #Add records to DB
             sql = "INSERT INTO system_state (src, des, order_ID) VALUES (%s, %s, %s)"
             val = (o.from_pcode,o.to_pcode,o.order_num)
@@ -113,43 +113,46 @@ def optimise():
                             cursor.execute(sql)
                             #create new table for each combo if it doesnt already exist
                             if not cursor.fetchall():
-
                                 sql = "CREATE TABLE {} (order_id INT, weight FLOAT, volume FLOAT, qty INT)".format(combo)
                                 print("Added table: "+combo)
                                 cursor.execute(sql)
                                 db.commit()
                             else:
                                 if count == 1 :
+                                    #Clear table if it already exists
                                     sql = "TRUNCATE TABLE {}".format(combo)
-                                    print("Cleared table: " + combo)
                                     cursor.execute(sql)
 
                             sql = "INSERT INTO {} (order_id, weight, volume, qty) VALUES (%s, %s, %s, %s)".format(combo)
                             val = (o.order_num, o.weight, o.volume, o.item_qty)
                             cursor.execute(sql, val)
-    print("TEST1")
+
     for combo in combos:
-        print(combo)
+        #get all route combinations
         sql = "SELECT * FROM %s" % combo
         cursor.execute(sql)
         v_tot = 0
         w_tot = 0
         batched_orders = []
+        #calculate total weight and volume for each route combo
         for o in cursor.fetchall():
-            if ((((w_tot + o[1]) * o[3]) < w_cap) or ((v_tot + o[2]) * o[3]) < v_cap) :
-                w_tot = (w_tot + o[1]) * o[3]
-                v_tot = (v_tot + o[2]) * o[3]
+            order_w = w_tot + (o[1] * o[3])
+            order_v = v_tot + (o[2] * o[3])
+            if (order_w < w_cap or order_v < v_cap) :
+                w_tot = order_w
+                v_tot = order_v
                 ord = get_order(o[0])
                 batched_orders.append(ord.order_num)
-                #if batch volume or weight is 90% truck capacity, send a direct shipment from origin to destination
-                if (((w_tot/w_cap)*100) > 90) or (((v_tot/v_cap)*100) > 90):
-                    shipment = Shipment(batched_orders, ord.from_pcode, [], ord.to_pcode)
-                    shipments.append(shipment)
-                    print("Shipment created for: " + combo)
-                    for o in shipment.orders:
-                        print("Includes: " + o)
+                w_cap_pct = (w_tot/w_cap)*100
+                v_cap_pct = (v_tot/v_cap)*100
+                #if batch volume or weight is 90% truck capacity, send a direct truck from origin to destination
+                if (w_cap_pct > 90) or (v_cap_pct > 90):
+                    truck = Truck(batched_orders, ord.from_pcode, [], ord.to_pcode)
+                    trucks.append(truck)
+                    print("Truck generated for route: " + combo + ". Weight=" + str(w_tot), " Volume="+str(v_tot))
+                    for o in truck.orders:
+                        print("Order added to truck : " + o )
                         to_remove = get_order(o)
-                        print("Removing from databases: " + to_remove.order_num)
                         processed_orders.remove(to_remove)
                         sql = "DELETE FROM system_state where order_ID = %s " % o
                         cursor.execute(sql)
@@ -157,11 +160,8 @@ def optimise():
                         sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                         cursor.execute(sql)
                         db.commit()
-                else:
-                    print("further optimisation required")
 
-
-    current_time = current_time + pd.Timedelta(seconds=1000)
+    current_time = current_time + pd.Timedelta(seconds=600)
     new_orders.clear()
 
 #optimise is running at every 10 seconds for troubleshooting purposes
