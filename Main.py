@@ -1,5 +1,6 @@
 import numpy as np
 from Order import Order
+from Postcodes import Postcodes
 import random
 import csv
 import googlemaps as maps
@@ -23,9 +24,17 @@ with open('datafile.csv', newline='') as csvfile:
 total_orders = len(orders)  # total number of order
 num_trucks = total_orders // 30  # total number of trucks
 
-
-
 next_time = ""
+
+# Import Postcode data into an array
+postcodes = []
+
+with open('australian_postcodes.csv', newline='') as csvfile:
+    postcodesList = csv.reader(csvfile, delimiter=',')
+    for row in postcodesList:
+        postcodes = Postcodes(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10])
+        postcodes.append(postcodes)
+
 
 # Get order object from orderID
 def get_order(orderid=""):
