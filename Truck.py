@@ -1,4 +1,4 @@
-class Shipment:
+class Truck:
     def __init__(self, orders="[]", origin="", stops="[]", destination=""):
         self._orders = orders
         self._origin = origin
