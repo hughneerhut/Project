@@ -1,12 +1,13 @@
 from Order import Order
+from Postcode import Postcode
 import csv
 import schedule
 import pandas as pd
 import time
 import mysql.connector
 
-# Group 14 - Logistical optimisation problem
 
+# Group 14 - Logistical optimisation problem
 
 db = mysql.connector.connect(
     host="localhost",
@@ -22,12 +23,19 @@ cursor.execute("CREATE TABLE src_des_matrix (src VARCHAR(5))")
 db.commit()
 # Step 1. Import delivery order list from CSV into an array
 orders = []
-
+postcodes = []
 with open('datafile.csv', newline='') as csvfile:
     orderlist = csv.reader(csvfile, delimiter=',')
     for row in orderlist:
         order = Order(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10])
         orders.append(order)
+
+with open('australian_postcodes.csv', newline='') as csvfile:
+    postcodeList = csv.reader(csvfile, delimiter=',')
+    for row in postcodeList:
+        postcode = Postcode(row[0], row[1], row[2])
+        postcodes.append(postcode)
+
 
 total_orders = len(orders)  # total number of order
 
@@ -54,7 +62,7 @@ def optimise():
         if (order_datetime - current_time).seconds < 600 and (order_datetime - current_time).days == 0:
             new_orders.append(o)
             processed_orders.append(o)
-            new_orders.append(o)
+
             print(o.order_num)
             #Add records to DB
             sql = "INSERT INTO system_state (src, des, order_ID) VALUES (%s, %s, %s)"
@@ -116,7 +124,7 @@ def optimise():
     new_orders.clear()
 
 #optimise is running at every 10 seconds for troubleshooting purposes
-schedule.every(1).seconds.do(optimise)
+schedule.every(5).seconds.do(optimise)
 cycles = cycles + 1
 
 while 1:
