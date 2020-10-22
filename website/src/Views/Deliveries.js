@@ -3,17 +3,26 @@ import View from '../Components/View';
 import ContentCard from '../Components/ContentCard';
 
 class Deliveries extends React.Component {
-  loadScript(src){
-    const script = document.createElement("script");    
-    script.async = true;    
-    script.src = src;    
-    document.body.appendChild(script);  
+
+  constructor(props){
+    super(props)
+    this.state = {
+      origin: this.props.location.data.origin,
+      destination: this.props.location.data.destination
+    }
   }
 
   componentDidMount(){
     this.loadScript("vendor/datatables/jquery.dataTables.min.js");
     this.loadScript("vendor/datatables/dataTables.bootstrap4.min.js");
     this.loadScript("js/demo/datatables-demo.js");
+  }
+
+  loadScript(src){
+    const script = document.createElement("script");    
+    script.async = true;    
+    script.src = src;    
+    document.body.appendChild(script);  
   }
 
   getOrders()
@@ -28,7 +37,8 @@ class Deliveries extends React.Component {
       volume: 200,
       weight: 200
     });
-    return orders;
+    return orders.filter(order => 
+      order.origin.value == this.state.origin && order.destination.value == this.state.destination);
   }
   
   render() {
