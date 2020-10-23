@@ -30,7 +30,7 @@ trucks = []
 with open('datafile.csv', newline='') as csvfile:
     orderlist = csv.reader(csvfile, delimiter=',')
     for row in orderlist:
-        order = Order(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10])
+        order = Order(row[0], row[1], row[5], row[6], row[7], row[2], row[3], row[4], row[8], row[9], row[10])
         orders.append(order)
 
 with open('australian_postcodes.csv', newline='') as csvfile:
@@ -127,39 +127,205 @@ def optimise():
                             val = (o.order_num, o.weight, o.volume, o.item_qty)
                             cursor.execute(sql, val)
 
-    for combo in combos:
-        #get all route combinations
-        sql = "SELECT * FROM %s" % combo
+
+    for d in destinations:
+        sql = "SELECT %s FROM src_des_matrix" % ("d" + d)
         cursor.execute(sql)
-        v_tot = 0
-        w_tot = 0
-        batched_orders = []
-        #calculate total weight and volume for each route combo
+        print("===== " + d)
+        i = 0
+        sources = []
+        combos = []
+        v_w = 0 #vic
+        v_v = 0
+        na_w = 0 #nsw/act
+        na_v = 0
+        q_v = 0
+        q_w = 0
+        s_w = 0
+        s_v = 0
+        w_w = 0
+        w_v =0
+        t_w = 0
+        t_v = 0
+        n_v = 0
+        n_w = 0
+
+        batched_orders_na = []
+        batched_orders_v = []
+        batched_orders_q = []
+        batched_orders_s = []
+        batched_orders_w = []
+        batched_orders_t = []
+        batched_orders_n = []
         for o in cursor.fetchall():
-            order_w = w_tot + (o[1] * o[3])
-            order_v = v_tot + (o[2] * o[3])
-            if (order_w < w_cap or order_v < v_cap) :
-                w_tot = order_w
-                v_tot = order_v
-                ord = get_order(o[0])
-                batched_orders.append(ord.order_num)
-                w_cap_pct = (w_tot/w_cap)*100
-                v_cap_pct = (v_tot/v_cap)*100
-                #if batch volume or weight is 90% truck capacity, send a direct truck from origin to destination
-                if (w_cap_pct > 90) or (v_cap_pct > 90):
-                    truck = Truck(batched_orders, ord.from_pcode, [], ord.to_pcode)
-                    trucks.append(truck)
-                    print("Truck generated for route: " + combo + ". Weight=" + str(w_tot), " Volume="+str(v_tot))
-                    for o in truck.orders:
-                        print("Order added to truck : " + o )
-                        to_remove = get_order(o)
-                        processed_orders.remove(to_remove)
-                        sql = "DELETE FROM system_state where order_ID = %s " % o
-                        cursor.execute(sql)
-                        db.commit()
-                        sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                        cursor.execute(sql)
-                        db.commit()
+            if (str(o) != "(None,)"):
+                sources.append(origins[i])
+                print(origins[i])
+            i = i + 1
+        for s in sources:
+            combo = "o" + s + "d" + d
+            combos.append(combo)
+        for combo in combos:
+            sql = "SELECT * FROM %s" % combo
+            cursor.execute(sql)
+            batched_orders = []
+            for o in cursor.fetchall():
+                if (combo[1] == "2"):
+                    na_w = na_w + (o[1] * o[3])
+                    print(na_w)
+                    na_v = na_v + (o[2] * o[3])
+                    w_cap_pct = (na_w / w_cap) * 100
+                    v_cap_pct = (na_v / v_cap) * 100
+                    ord = get_order(o[0])
+                    batched_orders_na.append(ord.order_num)
+                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                        truck = Truck(batched_orders_na, ord.from_pcode, [], ord.to_pcode)
+                        trucks.append(truck)
+                        print("Truck generated for destination: " + d + ". From NSW/ACT")
+                        for o in truck.orders:
+                            print("Order added to truck : " + o)
+                            to_remove = get_order(o)
+                            processed_orders.remove(to_remove)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
+                            db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+                            db.commit()
+
+                if (combo[1] == "3"):
+                    v_w = v_w + (o[1] * o[3])
+                    v_v = v_v + (o[2] * o[3])
+                    w_cap_pct = (v_w / w_cap) * 100
+                    v_cap_pct = (v_v / v_cap) * 100
+                    ord = get_order(o[0])
+                    batched_orders_v.append(ord.order_num)
+                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                        truck = Truck(batched_orders_v, ord.from_pcode, [], ord.to_pcode)
+                        trucks.append(truck)
+                        print("Truck generated for destination: " + d + ". From VIC")
+                        for o in truck.orders:
+                            print("Order added to truck : " + o)
+                            to_remove = get_order(o)
+                            processed_orders.remove(to_remove)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
+                            db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+                            db.commit()
+                if (combo[1] == "4"):
+                    q_w = q_w + (o[1] * o[3])
+                    q_v = q_v + (o[2] * o[3])
+                    w_cap_pct = (q_w / w_cap) * 100
+                    v_cap_pct = (q_v / v_cap) * 100
+                    ord = get_order(o[0])
+                    batched_orders_q.append(ord.order_num)
+                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                        truck = Truck(batched_orders_q, ord.from_pcode, [], ord.to_pcode)
+                        trucks.append(truck)
+                        print("Truck generated for destination: " + d + ". From QLD")
+                        for o in truck.orders:
+                            print("Order added to truck : " + o)
+                            to_remove = get_order(o)
+                            processed_orders.remove(to_remove)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
+                            db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+                            db.commit()
+                if (combo[1] == "5"):
+                    s_w = s_w + (o[1] * o[3])
+                    s_v = s_v + (o[2] * o[3])
+                    w_cap_pct = (s_w / w_cap) * 100
+                    v_cap_pct = (s_v / v_cap) * 100
+                    ord = get_order(o[0])
+                    batched_orders_s.append(ord.order_num)
+                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                        truck = Truck(batched_orders_s, ord.from_pcode, [], ord.to_pcode)
+                        trucks.append(truck)
+                        print("Truck generated for destination: " + d + ". From SA")
+                        for o in truck.orders:
+                            print("Order added to truck : " + o)
+                            to_remove = get_order(o)
+                            processed_orders.remove(to_remove)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
+                            db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+                            db.commit()
+                if (combo[1] == "6"):
+                    w_w = w_w + (o[1] * o[3])
+                    w_v = w_v + (o[2] * o[3])
+                    w_cap_pct = (w_w / w_cap) * 100
+                    v_cap_pct = (w_v / v_cap) * 100
+                    ord = get_order(o[0])
+                    batched_orders_w.append(ord.order_num)
+                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                        truck = Truck(batched_orders_w, ord.from_pcode, [], ord.to_pcode)
+                        trucks.append(truck)
+                        print("Truck generated for destination: " + d + ". From WA")
+                        for o in truck.orders:
+                            print("Order added to truck : " + o)
+                            to_remove = get_order(o)
+                            processed_orders.remove(to_remove)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
+                            db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+                            db.commit()
+                if (combo[1] == "7"):
+                    t_w = t_w + (o[1] * o[3])
+                    t_v = t_v + (o[2] * o[3])
+                    w_cap_pct = (t_w / w_cap) * 100
+                    v_cap_pct = (t_v / v_cap) * 100
+                    ord = get_order(o[0])
+                    batched_orders_t.append(ord.order_num)
+                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                        truck = Truck(batched_orders_t, ord.from_pcode, [], ord.to_pcode)
+                        trucks.append(truck)
+                        print("Truck generated for destination: " + d + ". From TAS")
+                        for o in truck.orders:
+                            print("Order added to truck : " + o)
+                            to_remove = get_order(o)
+                            processed_orders.remove(to_remove)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
+                            db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+                            db.commit()
+                if (combo[1] == "0") and (combo[2] == "8"):
+                    n_w = n_w + (o[1] * o[3])
+                    n_v = n_v + (o[2] * o[3])
+                    w_cap_pct = (n_w / w_cap) * 100
+                    v_cap_pct = (n_v / v_cap) * 100
+                    ord = get_order(o[0])
+                    batched_orders_n.append(ord.order_num)
+                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                        truck = Truck(batched_orders_n, ord.from_pcode, [], ord.to_pcode)
+                        trucks.append(truck)
+                        print("Truck generated for destination: " + d + ". From NT")
+                        for o in truck.orders:
+                            print("Order added to truck : " + o)
+                            to_remove = get_order(o)
+                            processed_orders.remove(to_remove)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
+                            db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+                            db.commit()
+
+            # if (origins[i][0] == d[0]) and (origins[i] in sources):
+            # print("same state")
+            # sql = "SELECT distance from distlocal where postcode1=%s and postcode2=%s" % (origins[i], d)
+            # cursor.execute(sql)
+            # print("DISTANCE: " + str(cursor.fetchall()))
+
 
     current_time = current_time + pd.Timedelta(seconds=600)
     new_orders.clear()
