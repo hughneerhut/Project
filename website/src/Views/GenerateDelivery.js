@@ -22,7 +22,13 @@ class GenerateDeliveries extends React.Component {
   }
 
   handleSubmit(event){
-    this.props.history.push("/deliveries");
+    this.props.history.push({
+      pathname: "/deliveries",
+      data: {
+              origin: this.state.origin,
+              destination: this.state.destination
+            }
+    });
     event.preventDefault();
   }
 
@@ -40,7 +46,9 @@ class GenerateDeliveries extends React.Component {
 
   getLocations()
   {
-    return ['Ringwood East VIC 3135', 'Ringwood VIC 3034', 'Mooroolbark VIC 3138'];
+    return [{value: '3135', display: 'Ringwood East VIC 3135'}, 
+            {value: '3134', display: 'Ringwood VIC 3134'},
+            {value: '3138', display: 'Mooroolbark VIC 3138'}];
   }
 
   render() {
@@ -53,7 +61,7 @@ class GenerateDeliveries extends React.Component {
                 <select class = "form-control" value = {this.state.origin} name = "origin" onChange = {this.handleChange}>
                   <option value = "" disabled selected>Select starting location</option>
                   {this.state.locations.map(loc => {
-                    return <option value = {loc}> {loc} </option>
+                    return <option value = {loc.value}> {loc.display} </option>
                   })}
                 </select>
               </label>
@@ -64,7 +72,7 @@ class GenerateDeliveries extends React.Component {
                 <select class = "form-control" value = {this.state.destination} name = "destination" onChange = {this.handleChange}>
                   <option value = "" disabled selected>Select destination</option>
                   {this.state.locations.map(loc => {
-                    return <option value = {loc}> {loc} </option>
+                    return <option value = {loc.value}> {loc.display} </option>
                   })}
                 </select>
               </label>
