@@ -266,9 +266,6 @@ def optimise():
                         truck = Truck(randint(100000, 9999999) , batched_orders_s, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
                         print("Truck generated for destination: " + d + ". From SA. ID: " + str(truck.id))
-                        sql = "INSERT INTO trucks (id, orders, destination, created) VALUES (%s, %s, %s, %s)" % (truck.id, batched_orders_s, d, current_time)
-                        cursor.execute(sql)
-                        db.commit()
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
