@@ -18,8 +18,9 @@ db = mysql.connector.connect(
 )
 cursor = db.cursor()
 #Reset system state tables
-cursor.execute("TRUNCATE TABLE system_state")
-cursor.execute("DROP TABLE src_des_matrix")
+cursor.execute("DROP TABLE IF EXISTS system_state")
+cursor.execute("CREATE TABLE system_state (src VARCHAR(4), des VARCHAR(4), order_ID INT)")
+cursor.execute("DROP TABLE IF EXISTS src_des_matrix")
 cursor.execute("CREATE TABLE src_des_matrix (src VARCHAR(5))")
 db.commit()
 # Step 1. Import delivery order list from CSV into an array
