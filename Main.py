@@ -6,6 +6,7 @@ import schedule
 import pandas as pd
 import time
 import mysql.connector
+from random import randint
 
 
 # Group 14 - Logistical optimisation problem
@@ -22,6 +23,8 @@ cursor.execute("DROP TABLE IF EXISTS system_state")
 cursor.execute("CREATE TABLE system_state (src VARCHAR(4), des VARCHAR(4), order_ID INT)")
 cursor.execute("DROP TABLE IF EXISTS src_des_matrix")
 cursor.execute("CREATE TABLE src_des_matrix (src VARCHAR(5))")
+cursor.execute("DROP TABLE IF EXISTS batched")
+cursor.execute("CREATE TABLE batched (orderID INT, truckID INT, origin INT, destination INT, created DATETIME)")
 db.commit()
 # Step 1. Import delivery order list from CSV into an array
 orders = []
@@ -173,23 +176,27 @@ def optimise():
             for o in cursor.fetchall():
                 if (combo[1] == "2"):
                     na_w = na_w + (o[1] * o[3])
-                    print(na_w)
                     na_v = na_v + (o[2] * o[3])
                     w_cap_pct = (na_w / w_cap) * 100
                     v_cap_pct = (na_v / v_cap) * 100
                     ord = get_order(o[0])
                     batched_orders_na.append(ord.order_num)
                     if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(batched_orders_na, ord.from_pcode, [], ord.to_pcode)
+                        truck = Truck(randint(100000, 9999999) , batched_orders_na, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
-                        print("Truck generated for destination: " + d + ". From NSW/ACT")
+                        print("Truck generated for destination: " + d + ". From NSW/ACT. ID: " + str(truck.id))
+                        db.commit()
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
                             processed_orders.remove(to_remove)
                             sql = "DELETE FROM system_state where order_ID = %s " % o
                             cursor.execute(sql)
-                            db.commit()
+
+                            sql = "INSERT INTO batched (orderID, truckID, origin, destination, created) VALUES (%s, %s, %s, %s, '%s')" % (o, truck.id, to_remove.from_pcode, d, current_time)
+                            print(sql)
+                            cursor.execute(sql)
+
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
@@ -202,9 +209,9 @@ def optimise():
                     ord = get_order(o[0])
                     batched_orders_v.append(ord.order_num)
                     if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(batched_orders_v, ord.from_pcode, [], ord.to_pcode)
+                        truck = Truck(randint(100000, 9999999) , batched_orders_v, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
-                        print("Truck generated for destination: " + d + ". From VIC")
+                        print("Truck generated for destination: " + d + ". From VIC. ID: " + str(truck.id))
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
@@ -212,6 +219,12 @@ def optimise():
                             sql = "DELETE FROM system_state where order_ID = %s " % o
                             cursor.execute(sql)
                             db.commit()
+
+                            sql = "INSERT INTO batched (orderID, truckID, origin, destination, created) VALUES (%s, %s, %s, %s, '%s')" % (
+                            o, truck.id, to_remove.from_pcode, d, current_time)
+                            print(sql)
+                            cursor.execute(sql)
+
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
@@ -223,9 +236,9 @@ def optimise():
                     ord = get_order(o[0])
                     batched_orders_q.append(ord.order_num)
                     if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(batched_orders_q, ord.from_pcode, [], ord.to_pcode)
+                        truck = Truck(randint(100000, 9999999) , batched_orders_q, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
-                        print("Truck generated for destination: " + d + ". From QLD")
+                        print("Truck generated for destination: " + d + ". From QLD. ID: " + str(truck.id))
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
@@ -233,6 +246,12 @@ def optimise():
                             sql = "DELETE FROM system_state where order_ID = %s " % o
                             cursor.execute(sql)
                             db.commit()
+
+                            sql = "INSERT INTO batched (orderID, truckID, origin, destination, created) VALUES (%s, %s, %s, %s, '%s')" % (
+                            o, truck.id, to_remove.from_pcode, d, current_time)
+                            print(sql)
+                            cursor.execute(sql)
+
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
@@ -244,9 +263,12 @@ def optimise():
                     ord = get_order(o[0])
                     batched_orders_s.append(ord.order_num)
                     if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(batched_orders_s, ord.from_pcode, [], ord.to_pcode)
+                        truck = Truck(randint(100000, 9999999) , batched_orders_s, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
-                        print("Truck generated for destination: " + d + ". From SA")
+                        print("Truck generated for destination: " + d + ". From SA. ID: " + str(truck.id))
+                        sql = "INSERT INTO trucks (id, orders, destination, created) VALUES (%s, %s, %s, %s)" % (truck.id, batched_orders_s, d, current_time)
+                        cursor.execute(sql)
+                        db.commit()
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
@@ -254,6 +276,12 @@ def optimise():
                             sql = "DELETE FROM system_state where order_ID = %s " % o
                             cursor.execute(sql)
                             db.commit()
+
+                            sql = "INSERT INTO batched (orderID, truckID, origin, destination, created) VALUES (%s, %s, %s, %s, '%s')" % (
+                            o, truck.id, to_remove.from_pcode, d, current_time)
+                            print(sql)
+                            cursor.execute(sql)
+
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
@@ -265,9 +293,9 @@ def optimise():
                     ord = get_order(o[0])
                     batched_orders_w.append(ord.order_num)
                     if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(batched_orders_w, ord.from_pcode, [], ord.to_pcode)
+                        truck = Truck(randint(100000, 9999999) , batched_orders_w, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
-                        print("Truck generated for destination: " + d + ". From WA")
+                        print("Truck generated for destination: " + d + ". From WA.  ID: " + str(truck.id))
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
@@ -275,6 +303,12 @@ def optimise():
                             sql = "DELETE FROM system_state where order_ID = %s " % o
                             cursor.execute(sql)
                             db.commit()
+
+                            sql = "INSERT INTO batched (orderID, truckID, origin, destination, created) VALUES (%s, %s, %s, %s, '%s')" % (
+                            o, truck.id, to_remove.from_pcode, d, current_time)
+                            print(sql)
+                            cursor.execute(sql)
+
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
@@ -286,9 +320,9 @@ def optimise():
                     ord = get_order(o[0])
                     batched_orders_t.append(ord.order_num)
                     if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(batched_orders_t, ord.from_pcode, [], ord.to_pcode)
+                        truck = Truck(randint(100000, 9999999) , batched_orders_t, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
-                        print("Truck generated for destination: " + d + ". From TAS")
+                        print("Truck generated for destination: " + d + ". From TAS.  ID: " + str(truck.id))
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
@@ -296,6 +330,12 @@ def optimise():
                             sql = "DELETE FROM system_state where order_ID = %s " % o
                             cursor.execute(sql)
                             db.commit()
+
+                            sql = "INSERT INTO batched (orderID, truckID, origin, destination, created) VALUES (%s, %s, %s, %s, '%s')" % (
+                            o, truck.id, to_remove.from_pcode, d, current_time)
+                            print(sql)
+                            cursor.execute(sql)
+
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
@@ -307,9 +347,9 @@ def optimise():
                     ord = get_order(o[0])
                     batched_orders_n.append(ord.order_num)
                     if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(batched_orders_n, ord.from_pcode, [], ord.to_pcode)
+                        truck = Truck(randint(100000, 9999999) , batched_orders_n, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
-                        print("Truck generated for destination: " + d + ". From NT")
+                        print("Truck generated for destination: " + d + ". From NT. ID: " + str(truck.id))
                         for o in truck.orders:
                             print("Order added to truck : " + o)
                             to_remove = get_order(o)
@@ -317,6 +357,11 @@ def optimise():
                             sql = "DELETE FROM system_state where order_ID = %s " % o
                             cursor.execute(sql)
                             db.commit()
+
+                            sql = "INSERT INTO batched (orderID, truckID, origin, destination, created) VALUES (%s, %s, %s, %s, '%s')" % (o, truck.id, to_remove.from_pcode, d, current_time)
+                            print(sql)
+                            cursor.execute(sql)
+
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
