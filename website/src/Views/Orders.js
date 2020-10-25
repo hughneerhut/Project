@@ -52,6 +52,7 @@ class Orders extends React.Component {
                   <th>Item QTY</th>
                   <th>Volume</th>
                   <th>Weight</th>
+                  <th>Status</th>
                   <th>Ordered Date</th>
                 </tr>
               </thead>
@@ -63,6 +64,7 @@ class Orders extends React.Component {
                   <th>Item QTY</th>
                   <th>Volume</th>
                   <th>Weight</th>
+                  <th>Status</th>
                   <th>Ordered Date</th>
                 </tr>
               </tfoot>
@@ -76,6 +78,7 @@ class Orders extends React.Component {
                       <td>{order.qty}</td>
                       <td>{order.volume}</td>
                       <td>{order.weight}</td>
+                      <td>{order.status}</td>
                       <td>{order.created}</td>
                     </tr>
                   );
