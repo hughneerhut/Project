@@ -27,7 +27,7 @@ cursor.execute("CREATE TABLE src_des_matrix (src VARCHAR(5))")
 cursor.execute("DROP TABLE IF EXISTS batched")
 cursor.execute("CREATE TABLE batched (orderID INT, truckID INT, pickupIndex INT, origin INT, destination INT, created DATETIME)")
 cursor.execute("DROP TABLE IF EXISTS processed")
-cursor.execute("CREATE TABLE processed (orderID INT, origin INT, destination INT, status VARCHAR(20), truckID INT, created DATETIME)")
+cursor.execute("CREATE TABLE processed (orderID INT, origin INT, destination INT, weight FLOAT, volume FLOAT, qty INT, status VARCHAR(20), truckID INT, created DATETIME)")
 db.commit()
 # Step 1. Import delivery order list from CSV into an array
 orders = []
@@ -112,7 +112,7 @@ def optimise():
         if (order_datetime - current_time).seconds < 600 and (order_datetime - current_time).days == 0:
             new_orders.append(o)
             processed_orders.append(o)
-            sql = "INSERT INTO processed (orderID, origin, destination, status, created) VALUES (%s, %s, %s, 'NEW', '%s')" % (o.order_num, o.from_pcode, o.to_pcode, current_time)
+            sql = "INSERT INTO processed (orderID, origin, destination, weight, volume, qty, status, created) VALUES (%s, %s, %s, %s, %s, %s, 'NEW', '%s')" % (o.order_num, o.from_pcode, o.to_pcode, o.weight, o.volume, o.item_qty, current_time)
             cursor.execute(sql)
             db.commit()
             print(o.order_num + " - Source: " + str(o.from_pcode) + ". Destination: " + str(o.to_pcode))
@@ -563,7 +563,7 @@ def optimise():
     current_time = current_time + pd.Timedelta(seconds=600)
     new_orders.clear()
 
-#optimise is running at every 10 seconds for troubleshooting purposes
+#optimise is running at every 10 seconds for troubleshooting purposesxc
 schedule.every(5).seconds.do(optimise)
 cycles = cycles + 1
 
