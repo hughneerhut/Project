@@ -128,6 +128,9 @@ class Deliveries extends React.Component {
             </table>
           </div>
         </ContentCard>
+        <ContentCard title = "Map">
+          <img src = {require("../map.png")} width = "100%"/>
+        </ContentCard>
       </View>
     );
   }
