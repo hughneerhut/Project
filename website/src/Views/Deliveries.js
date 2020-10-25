@@ -1,6 +1,7 @@
 import React from 'react';
 import View from '../Components/View';
 import ContentCard from '../Components/ContentCard';
+import DataCard from '../Components/DataCard';
 
 class Deliveries extends React.Component {
 
@@ -35,10 +36,39 @@ class Deliveries extends React.Component {
       }).catch(err => console.log(err));
     });
   }
+
+  getDeliveryWeight()
+  {
+    let weight = 0;
+    this.state.orders.forEach(order => {
+      weight += order.weight;
+    });
+    return weight;
+  }
+
+  getDeliveryVolume()
+  {
+    let volume = 0;
+    this.state.orders.forEach(order => {
+      volume += order.volume;
+    })
+    return volume;
+  }
   
   render() {
     return (
       <View title = "Deliveries">
+        <ContentCard title = "Delivery Information">
+          <DataCard title = "Truck ID" 
+              data = {this.state.orders.length != 0 ? this.state.orders[0].truckID : 0} 
+              icon = "fa-truck" 
+              color = "primary"/>
+          <DataCard title = "Delivery Weight" data = {this.getDeliveryWeight() + "kg"} icon = "fa-truck" color = "primary"/>
+          <DataCard title = "Delivery Volume" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
+          <DataCard title = "Total Stops" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
+          <DataCard title = "Total Orders" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
+          <DataCard title = "Total Orders" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
+        </ContentCard>
         <ContentCard>
           <div class="table-responsive">
             <table class="table table-bordered" width="100%" cellspacing="0">
