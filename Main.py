@@ -270,6 +270,9 @@ def optimise():
                             sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
                             cursor.execute(sql)
                             db.commit()
+                        na_v = 0
+                        na_w = 0
+                        na_sources = []
 
                 if (combo[1] == "3"):
                     v_w = v_w + (o[1] * o[3])
@@ -319,6 +322,9 @@ def optimise():
                             sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
                             cursor.execute(sql)
                             db.commit()
+                        v_v = 0
+                        v_w = 0
+                        v_sources = []
                 if (combo[1] == "4"):
                     q_w = q_w + (o[1] * o[3])
                     q_v = q_v + (o[2] * o[3])
@@ -328,7 +334,7 @@ def optimise():
                     batched_orders_q.append(ord.order_num)
                     q_sources.append(ord.from_pcode)
 
-                    if (w_cap_pct > 90) or (v_cap_pct > 90):
+                    if (w_cap_pct > 95) or (v_cap_pct > 95):
                         truck = Truck(randint(100000, 999999) , batched_orders_q, ord.from_pcode, [], ord.to_pcode)
                         trucks.append(truck)
 
@@ -371,6 +377,9 @@ def optimise():
                             sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
                             cursor.execute(sql)
                             db.commit()
+                        q_v = 0
+                        q_w = 0
+                        q_sources = []
                 if (combo[1] == "5"):
                     s_w = s_w + (o[1] * o[3])
                     s_v = s_v + (o[2] * o[3])
@@ -417,6 +426,9 @@ def optimise():
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
+                        s_v = 0
+                        s_w = 0
+                        s_sources = []
                 if (combo[1] == "6"):
                     w_w = w_w + (o[1] * o[3])
                     w_v = w_v + (o[2] * o[3])
@@ -463,6 +475,9 @@ def optimise():
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
+                        w_v = 0
+                        w_w = 0
+                        w_sources = []
                 if (combo[1] == "7"):
                     t_w = t_w + (o[1] * o[3])
                     t_v = t_v + (o[2] * o[3])
@@ -507,6 +522,9 @@ def optimise():
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
+                        t_v = 0
+                        t_w = 0
+                        t_sources = []
                 if (combo[1] == "0") and (combo[2] == "8"):
                     n_w = n_w + (o[1] * o[3])
                     n_v = n_v + (o[2] * o[3])
@@ -552,6 +570,9 @@ def optimise():
                             sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
                             cursor.execute(sql)
                             db.commit()
+                        n_v = 0
+                        n_w = 0
+                        n_sources = []
 
             # if (origins[i][0] == d[0]) and (origins[i] in sources):
             # print("same state")
