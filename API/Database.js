@@ -1,17 +1,16 @@
 const mysql = require("mysql");
 
-class Database
+module.exports = class Database
 {
   constructor(){
     this.auth = {
       host: "localhost",
       user: "root",
       password: "rootpass",
-      database: "records"
+      database: "project"
     }
 
     this.conn = mysql.createConnection(this.auth);
-    console.log("Hello");
   }
 
   open(){
@@ -35,14 +34,12 @@ class Database
       this.open().then(conn => {
         conn.query("SELECT * FROM batched;", (err, res) => {
           if(err)
-            console.log(err);
+            reject(err);
           else
-            console.log("Hello");
+            resolve(res);
         });
-      }).catch(err => {
-        console.log(err);
-        reject(err);
-      });
+      }).catch(err => 
+        reject(err));
     });
 
   }
@@ -60,5 +57,3 @@ class Database
 
   }
 }
-
-export default Database;
