@@ -71,8 +71,36 @@ module.exports = class Database
     });
   }
 
-  getTruck(origin)
+  getTruck(origin, destination)
   {
-
+    return new Promise((resolve, reject) => {
+      this.open().then(conn => {
+        conn.query("SELECT truckID FROM batched WHERE origin = " + origin + " AND destination = " + destination + ";", (err, res) => {
+          if(err)
+            reject(err);
+          else if(res.length == 0)
+            resolve();
+          else
+            conn.query("SELECT "
+                          + "b.pickupIndex," 
+                          + "p.* "
+                      +"FROM "
+                          + "processed p "
+                      +"INNER JOIN batched b "
+                          + "ON p.orderID = b.orderID "
+                      +"WHERE "
+                          + "b.truckID = " + res[0].truckID + " "
+                      +"ORDER BY "
+                          + "b.pickupIndex;",
+            (err, res) => {
+              if(err)
+                reject(err)
+              else
+                resolve(res);
+            })
+        });
+      }).catch(err => 
+        reject(err));
+    });
   }
 }

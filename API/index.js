@@ -25,6 +25,13 @@ app.get('/origins', function(req, res) {
   }).catch(err => console.log(err));
 });
 
+app.get('/truck', function(req, res){
+  db.getTruck('4164', '3029').then(result => {
+    console.log("Truck requested.");
+    res.send(result);
+  }).catch(err => console.log(err));
+})
+
 app.listen(3001, () => {
   console.log("API Listening, go to http://localhost:3001/orders for list of orders");
 });
