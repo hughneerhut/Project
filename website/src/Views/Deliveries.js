@@ -12,19 +12,6 @@ class Deliveries extends React.Component {
     // }
   }
 
-  componentDidMount(){
-    this.loadScript("vendor/datatables/jquery.dataTables.min.js");
-    this.loadScript("vendor/datatables/dataTables.bootstrap4.min.js");
-    this.loadScript("js/demo/datatables-demo.js");
-  }
-
-  loadScript(src){
-    const script = document.createElement("script");    
-    script.async = true;    
-    script.src = src;    
-    document.body.appendChild(script);  
-  }
-
   getOrders()
   {
     let orders = [];
@@ -47,7 +34,7 @@ class Deliveries extends React.Component {
       <View title = "Deliveries">
         <ContentCard>
           <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <table class="table table-bordered" width="100%" cellspacing="0">
               <thead>
                 <tr>
                   <th>Order #</th>

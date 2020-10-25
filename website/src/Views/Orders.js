@@ -4,6 +4,11 @@ import ContentCard from '../Components/ContentCard';
 
 class Orders extends React.Component {
 
+  constructor(){
+    super();
+    this.state = {orders: []};
+  }
+
   loadScript(src){
     const script = document.createElement("script");    
     script.async = true;    
@@ -15,21 +20,20 @@ class Orders extends React.Component {
     this.loadScript("vendor/datatables/jquery.dataTables.min.js");
     this.loadScript("vendor/datatables/dataTables.bootstrap4.min.js");
     this.loadScript("js/demo/datatables-demo.js");
+
+    this.getOrders();
   }
 
   getOrders()
   {
-    let orders = [];
-    orders.push({
-      number: 1, 
-      date: '12/12/2020', 
-      origin: {value: '3135', display: '3135 VIC Australia'},
-      destination: {value: '3138', display: '3138 VIC Australia' },
-      item_qty: 2,
-      volume: 200,
-      weight: 200
+    fetch('http://localhost:3001/orders')
+    .then(response => {
+      console.log(response);
+      response.json().then(orders => {
+        console.log("Hello");
+        this.setState({orders: orders});
+      });
     });
-    return orders;
   }
 
   render() {
@@ -42,36 +46,36 @@ class Orders extends React.Component {
               <thead>
                 <tr>
                   <th>Order #</th>
-                  <th>Ordered Date</th>
                   <th>Origin</th>
                   <th>Destination</th>
                   <th>Item QTY</th>
                   <th>Volume</th>
                   <th>Weight</th>
+                  <th>Ordered Date</th>
                 </tr>
               </thead>
               <tfoot>
                 <tr>
                   <th>Order #</th>
-                  <th>Ordered Date</th>
                   <th>Origin</th>
                   <th>Destination</th>
                   <th>Item QTY</th>
                   <th>Volume</th>
                   <th>Weight</th>
+                  <th>Ordered Date</th>
                 </tr>
               </tfoot>
               <tbody>
-                {this.getOrders().map(order => {
+                {this.state.orders.map(order => {
                   return(
                     <tr>
-                      <td>{order.number}</td>
-                      <td>{order.date}</td>
-                      <td>{order.origin.display}</td>
-                      <td>{order.destination.display}</td>
-                      <td>{order.item_qty}</td>
+                      <td>{order.orderID}</td>
+                      <td>{order.origin}</td>
+                      <td>{order.destination}</td>
+                      <td>{order.qty}</td>
                       <td>{order.volume}</td>
                       <td>{order.weight}</td>
+                      <td>{order.created}</td>
                     </tr>
                   );
                 })}

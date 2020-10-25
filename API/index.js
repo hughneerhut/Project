@@ -4,6 +4,11 @@ const express = require("express");
 const app = express();
 const db = new Database();
 
+app.use(function(req,res,next){
+  res.header('Access-Control-Allow-Origin', "*");
+  next();
+});
+
 app.get('/orders', function(req, res) {
   db.getOrders().then((result) => {
     console.log("List of orders requested.");
