@@ -56,6 +56,7 @@ class GenerateDeliveries extends React.Component {
     .then(response => {
       response.json().then(destinations => {
         this.setState({...this.state, destinations: destinations});
+        document.getElementById("destination").style.display = "block";
       });
     });
   }
@@ -86,7 +87,7 @@ class GenerateDeliveries extends React.Component {
               </label>
             </div>
 
-            <div class = "form-group">
+            <div class = "form-group" id = "destination" style = {{display: "none"}}> 
               <label>Destination
                 <select class = "form-control" value = {this.state.destination} name = "destination" onChange = {this.handleChange}>
                   <option value = "" disabled selected>Select destination</option>
