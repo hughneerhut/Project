@@ -31,7 +31,9 @@ class Deliveries extends React.Component {
     .then(response => {
       console.log(response);
       response.json().then(orders => {
-        console.log("Hello");
+        orders = orders.map(order => {
+          return {...order, created: new Date(Date.parse(order.created)).toLocaleString()}
+        });
         this.setState({orders: orders});
       }).catch(err => console.log(err));
     });

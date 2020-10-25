@@ -42,6 +42,20 @@ module.exports = class Database
     }).finally(() => this.close());
   }
 
+  getBatchedOrders(){
+    return new Promise((resolve, reject) => {
+      this.open().then(conn => {
+        conn.query("SELECT * FROM batched b INNER JOIN processed p ON b.orderID = p.orderID WHERE p.status = 'BATCHED';", (err, res) => {
+          if(err)
+            reject(err);
+          else
+            resolve(res);
+        });
+      }).catch(err => 
+        reject(err));
+    }).finally(() => this.close());
+  }
+
   getOrigins(){
     return new Promise((resolve, reject) => {
       this.open().then(conn => {

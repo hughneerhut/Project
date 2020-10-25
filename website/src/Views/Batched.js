@@ -2,7 +2,7 @@ import React from 'react';
 import View from '../Components/View';
 import ContentCard from '../Components/ContentCard';
 
-class Orders extends React.Component {
+class Batched extends React.Component {
 
   constructor(){
     super();
@@ -22,7 +22,7 @@ class Orders extends React.Component {
 
   getOrders()
   {
-    fetch('http://localhost:3001/orders')
+    fetch('http://localhost:3001/batched')
     .then(response => {
       console.log(response);
       response.json().then(orders => {
@@ -39,7 +39,7 @@ class Orders extends React.Component {
 
   render() {
     return (
-      <View title = "Orders">
+      <View title = "Batched Orders">
 
         <ContentCard>
           <div class="table-responsive">
@@ -47,6 +47,7 @@ class Orders extends React.Component {
               <thead>
                 <tr>
                   <th>Order #</th>
+                  <th>Truck ID</th>
                   <th>Origin</th>
                   <th>Destination</th>
                   <th>Item QTY</th>
@@ -58,6 +59,7 @@ class Orders extends React.Component {
               <tfoot>
                 <tr>
                   <th>Order #</th>
+                  <th>Truck ID</th>
                   <th>Origin</th>
                   <th>Destination</th>
                   <th>Item QTY</th>
@@ -71,6 +73,7 @@ class Orders extends React.Component {
                   return(
                     <tr>
                       <td>{order.orderID}</td>
+                      <td>{order.truckID}</td>
                       <td>{order.origin}</td>
                       <td>{order.destination}</td>
                       <td>{order.qty}</td>
@@ -91,4 +94,4 @@ class Orders extends React.Component {
   }
 }
 
-export default Orders;
+export default Batched;
