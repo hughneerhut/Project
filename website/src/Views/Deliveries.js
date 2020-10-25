@@ -6,10 +6,10 @@ class Deliveries extends React.Component {
 
   constructor(props){
     super(props)
-    this.state = {
-      origin: this.props.location.data.origin,
-      destination: this.props.location.data.destination
-    }
+    // this.state = {
+    //   origin: this.props.location.data.origin,
+    //   destination: this.props.location.data.destination
+    // }
   }
 
   componentDidMount(){
@@ -37,8 +37,9 @@ class Deliveries extends React.Component {
       volume: 200,
       weight: 200
     });
-    return orders.filter(order => 
-      order.origin.value == this.state.origin && order.destination.value == this.state.destination);
+    return orders;
+    // return orders.filter(order => 
+    //   order.origin.value == this.state.origin && order.destination.value == this.state.destination);
   }
   
   render() {
