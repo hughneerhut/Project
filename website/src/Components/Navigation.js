@@ -26,7 +26,7 @@ class Sidebar extends React.Component{
 
         <NavItem link = "/orders" name = "Orders" icon = "fa-table"/>
         
-        <NavItem link = "/generateDeliveries" name = "Generate delivery route" icon = "fa-route"/>
+        <NavItem link = "/generateDeliveries" name = "Get Delivery Grouping" icon = "fa-route"/>
       </ul>
     );
   }

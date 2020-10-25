@@ -9,16 +9,20 @@ class GenerateDeliveries extends React.Component {
   {
     super(props);
     this.state = {
-      locations: [],
+      origins: [],
+      destinations: [],
       origin: '',
       destination: '',
       weight: 3000, //kg
       volume: 5000 //cm3
     };
-    this.state.locations = this.getLocations();
-
+    
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  componentDidMount(){
+    this.getLocations();
   }
 
   handleSubmit(event){
@@ -46,9 +50,19 @@ class GenerateDeliveries extends React.Component {
 
   getLocations()
   {
-    return [{value: '3135', display: 'Ringwood East VIC 3135'}, 
-            {value: '3134', display: 'Ringwood VIC 3134'},
-            {value: '3138', display: 'Mooroolbark VIC 3138'}];
+    fetch('http://localhost:3001/origins')
+    .then(response => {
+      console.log(response);
+      response.json().then(origins => {
+        fetch('http://localhost:3001/destinations')
+        .then(response => {
+          console.log(response);
+          response.json().then(destinations => {
+            this.setState({...this.state,destinations: destinations, origins: origins});
+          });
+        });
+      });
+    });
   }
 
   render() {
@@ -60,8 +74,8 @@ class GenerateDeliveries extends React.Component {
               <label>Starting Location
                 <select class = "form-control" value = {this.state.origin} name = "origin" onChange = {this.handleChange}>
                   <option value = "" disabled selected>Select starting location</option>
-                  {this.state.locations.map(loc => {
-                    return <option value = {loc.value}> {loc.display} </option>
+                  {this.state.origins.map(loc => {
+                    return <option value = {loc}> {loc} </option>
                   })}
                 </select>
               </label>
@@ -71,8 +85,8 @@ class GenerateDeliveries extends React.Component {
               <label>Destination
                 <select class = "form-control" value = {this.state.destination} name = "destination" onChange = {this.handleChange}>
                   <option value = "" disabled selected>Select destination</option>
-                  {this.state.locations.map(loc => {
-                    return <option value = {loc.value}> {loc.display} </option>
+                  {this.state.destinations.map(loc => {
+                    return <option value = {loc}> {loc} </option>
                   })}
                 </select>
               </label>
