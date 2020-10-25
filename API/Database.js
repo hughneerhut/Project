@@ -59,7 +59,7 @@ module.exports = class Database
   getOrigins(){
     return new Promise((resolve, reject) => {
       this.open().then(conn => {
-        conn.query("SELECT origin FROM batched WHERE pickupIndex = 1;", (err, res) => {
+        conn.query("SELECT origin FROM batched WHERE pickupIndex = 1 GROUP BY origin;", (err, res) => {
           if(err)
             reject(err);
           else
@@ -70,10 +70,10 @@ module.exports = class Database
     }).finally(() => this.close());
   }
 
-  getDestinations(){
+  getDestinations(origin){
     return new Promise((resolve, reject) => {
       this.open().then(conn => {
-        conn.query("SELECT destination FROM batched GROUP BY destination;", (err, res) => {
+        conn.query("SELECT destination FROM batched" + (origin ? " WHERE origin = " + origin : "") + " GROUP BY destination;", (err, res) => {
           if(err)
             reject(err);
           else

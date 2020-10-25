@@ -56,22 +56,45 @@ class Deliveries extends React.Component {
     })
     return volume;
   }
+
+  getStops()
+  {
+    let stops = 0;
+    let lastStop = 0;
+    this.state.orders.forEach(order => {
+      if(order.pickupIndex != lastStop)
+      {
+        stops++;
+        lastStop = order.pickupIndex;
+      }
+    });
+    return stops;
+  }
+
+  getItems()
+  {
+    let items = 0;
+    this.state.orders.forEach(order => {
+      items += order.qty;
+    });
+    return items;
+  }
   
   render() {
     return (
-      <View title = "Deliveries">
+      <View title = "Batched Delivery">
         <ContentCard title = "Delivery Information">
           <DataCard title = "Truck ID" 
               data = {this.state.orders.length != 0 ? this.state.orders[0].truckID : 0} 
               icon = "fa-truck" 
               color = "primary"/>
-          <DataCard title = "Delivery Weight" data = {this.getDeliveryWeight() + "kg"} icon = "fa-truck" color = "primary"/>
-          <DataCard title = "Delivery Volume" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
-          <DataCard title = "Total Stops" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
-          <DataCard title = "Total Orders" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
-          <DataCard title = "Total Orders" data = {this.getDeliveryVolume() + "cm3"} icon = "fa-truck" color = "primary"/>
+          <DataCard title = "Delivery Weight" data = {this.getDeliveryWeight() + "kg"} icon = "fa-anchor" color = "primary"/>
+          <DataCard title = "Delivery Volume" data = {this.getDeliveryVolume() + "m3"} icon = "fa-volume-up" color = "primary"/>
+          <DataCard title = "Total Orders" data = {this.state.orders.length} icon = "fa-shopping-cart" color = "primary"/>
+          <DataCard title = "Total Stops" data = {this.getStops()} icon = "fa-stop" color = "primary"/>
+          <DataCard title = "Total Items" data = {this.getItems()} icon = "fa-gift" color = "primary"/>
         </ContentCard>
-        <ContentCard>
+        <ContentCard title = "Deliveries list">
           <div class="table-responsive">
             <table class="table table-bordered" width="100%" cellspacing="0">
               <thead>
