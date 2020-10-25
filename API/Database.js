@@ -32,6 +32,20 @@ module.exports = class Database
   getOrders(){
     return new Promise((resolve, reject) => {
       this.open().then(conn => {
+        conn.query("SELECT * FROM processed;", (err, res) => {
+          if(err)
+            reject(err);
+          else
+            resolve(res);
+        });
+      }).catch(err => 
+        reject(err));
+    });
+  }
+
+  getOrigins(){
+    return new Promise((resolve, reject) => {
+      this.open().then(conn => {
         conn.query("SELECT * FROM batched;", (err, res) => {
           if(err)
             reject(err);
@@ -41,11 +55,6 @@ module.exports = class Database
       }).catch(err => 
         reject(err));
     });
-
-  }
-
-  getOrigins(){
-
   }
 
   getDestinations(){
