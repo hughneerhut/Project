@@ -9,11 +9,10 @@ module.exports = class Database
       password: "rootpass",
       database: "project"
     }
-
-    this.conn = mysql.createConnection(this.auth);
   }
 
   open(){
+    this.conn = mysql.createConnection(this.auth);
     let conn = this.conn;
     return new Promise((resolve, reject) => {
       conn.connect(err => {
@@ -40,7 +39,7 @@ module.exports = class Database
         });
       }).catch(err => 
         reject(err));
-    });
+    }).finally(() => this.close());
   }
 
   getOrigins(){
@@ -54,7 +53,7 @@ module.exports = class Database
         });
       }).catch(err => 
         reject(err));
-    });
+    }).finally(() => this.close());
   }
 
   getDestinations(){
@@ -68,7 +67,7 @@ module.exports = class Database
         });
       }).catch(err => 
         reject(err));
-    });
+    }).finally(() => this.close());
   }
 
   getTruck(origin, destination)
@@ -100,7 +99,7 @@ module.exports = class Database
             })
         });
       }).catch(err => 
-        reject(err));
-    });
+        reject(err)) 
+    }).finally(() => this.close());
   }
 }

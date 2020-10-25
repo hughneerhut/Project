@@ -26,8 +26,12 @@ app.get('/origins', function(req, res) {
 });
 
 app.get('/truck', function(req, res){
-  db.getTruck('4164', '3029').then(result => {
-    console.log("Truck requested.");
+  if(!req.query.origin || !req.query.dest)
+    return res.status(400).send({message: "Origin / Destination not provided."});
+  let origin = req.query.origin; //testing: 4164
+  let destination = req.query.dest; //testing: 3029
+  db.getTruck(origin, destination).then(result => {
+    console.log("Truck requested for " + origin + " to " + destination);
     res.send(result);
   }).catch(err => console.log(err));
 })
