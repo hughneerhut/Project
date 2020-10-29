@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\website",
+    "\\website\\public",
+    "\\website\\public\\css",
+    "\\website\\public\\img",
+    "\\website\\public\\js",
+    "\\website\\src",
+    "\\website\\src\\Components",
+    "\\website\\src\\Views"
+  ],
+  "SelectedNode": "\\website\\src\\Components\\ContentCard.js",
+  "PreviewInSolutionExplorer": false
+}

@@ -2,6 +2,8 @@ import React from 'react';
 import View from '../Components/View';
 import ContentCard from '../Components/ContentCard';
 import DataCard from '../Components/DataCard';
+import MapContainer from '../Components/MapContainer';
+
 
 class Deliveries extends React.Component {
 
@@ -79,7 +81,8 @@ class Deliveries extends React.Component {
     });
     return items;
   }
-  
+
+
   render() {
     return (
       <View title = "Batched Delivery">
@@ -128,8 +131,8 @@ class Deliveries extends React.Component {
             </table>
           </div>
         </ContentCard>
-        <ContentCard title = "Map">
-          <img src = {require("../map.png")} width = "100%"/>
+            <ContentCard title="Map">
+                <MapContainer/>
         </ContentCard>
       </View>
     );
