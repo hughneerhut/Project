@@ -24,7 +24,9 @@ class Sidebar extends React.Component{
         <hr className = "sidebar-divider my-0"/>
         <NavItem link = "/" name = "Dashboard" icon = "fa-tachometer-alt" />
 
-        <NavItem link = "/orders" name = "Orders" icon = "fa-table"/>
+        <NavItem link = "/orders" name = "All Orders" icon = "fa-table"/>
+
+        <NavItem link = "/batched" name = "Batched Orders" icon = "fa-table"/>
         
         <NavItem link = "/generateDeliveries" name = "Get Delivery Grouping" icon = "fa-route"/>
       </ul>

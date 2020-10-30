@@ -42,10 +42,10 @@ module.exports = class Database
     }).finally(() => this.close());
   }
 
-  getOrigins(){
+  getBatchedOrders(){
     return new Promise((resolve, reject) => {
       this.open().then(conn => {
-        conn.query("SELECT origin FROM batched WHERE pickupIndex = 1;", (err, res) => {
+        conn.query("SELECT * FROM batched b INNER JOIN processed p ON b.orderID = p.orderID WHERE p.status = 'BATCHED';", (err, res) => {
           if(err)
             reject(err);
           else
@@ -56,10 +56,24 @@ module.exports = class Database
     }).finally(() => this.close());
   }
 
-  getDestinations(){
+  getOrigins(){
     return new Promise((resolve, reject) => {
       this.open().then(conn => {
-        conn.query("SELECT destination FROM batched GROUP BY destination;", (err, res) => {
+        conn.query("SELECT origin FROM batched WHERE pickupIndex = 1 GROUP BY origin;", (err, res) => {
+          if(err)
+            reject(err);
+          else
+            resolve(res);
+        });
+      }).catch(err => 
+        reject(err));
+    }).finally(() => this.close());
+  }
+
+  getDestinations(origin){
+    return new Promise((resolve, reject) => {
+      this.open().then(conn => {
+        conn.query("SELECT destination FROM batched" + (origin ? " WHERE origin = " + origin : "") + " GROUP BY destination;", (err, res) => {
           if(err)
             reject(err);
           else

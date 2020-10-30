@@ -46,21 +46,27 @@ class GenerateDeliveries extends React.Component {
       ...this.state,
       [name] : value
     });
+
+    if(name == "origin")
+      this.handleOriginChange(value);
+  }
+
+  handleOriginChange(origin){
+    fetch('http://localhost:3001/destinations?origin='+origin)
+    .then(response => {
+      response.json().then(destinations => {
+        this.setState({...this.state, destinations: destinations});
+        document.getElementById("destination").style.display = "block";
+      });
+    });
   }
 
   getLocations()
   {
     fetch('http://localhost:3001/origins')
     .then(response => {
-      console.log(response);
       response.json().then(origins => {
-        fetch('http://localhost:3001/destinations')
-        .then(response => {
-          console.log(response);
-          response.json().then(destinations => {
-            this.setState({...this.state,destinations: destinations, origins: origins});
-          });
-        });
+        this.setState({...this.state, origins: origins});
       });
     });
   }
@@ -81,7 +87,7 @@ class GenerateDeliveries extends React.Component {
               </label>
             </div>
 
-            <div class = "form-group">
+            <div class = "form-group" id = "destination" style = {{display: "none"}}> 
               <label>Destination
                 <select class = "form-control" value = {this.state.destination} name = "destination" onChange = {this.handleChange}>
                   <option value = "" disabled selected>Select destination</option>

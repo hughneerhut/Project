@@ -19,7 +19,7 @@ class View extends React.Component {
           <footer className = "sticky-footer bg-white">
             <div className = "container my-auto">
               <div className = "copyright text-center my-auto">
-                <span>Copyright &copy; Your Website 2020</span>
+                <span>Copyright &copy; Swinburne University SEPA Group 14 2020</span>
               </div>
             </div>
           </footer>

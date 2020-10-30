@@ -16,8 +16,15 @@ app.get('/orders', function(req, res) {
   }).catch(err => console.log(err));
 });
 
+app.get('/batched', function(req, res) {
+  db.getBatchedOrders().then((result) => {
+    console.log("List of batched orders requested.");
+    res.send(result);
+  }).catch(err => console.log(err));
+});
+
 app.get('/destinations', function(req, res) {
-  db.getDestinations().then((result) => {
+  db.getDestinations(req.query.origin).then((result) => {
     console.log("List of destinations requested.");
     res.send(result.map(dest => dest.destination));
   }).catch(err => console.log(err));
