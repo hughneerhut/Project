@@ -74,11 +74,12 @@ def get_starting_loc(origins = [], destination = ""):
             furthest = dist
     return furthest_pc
 
-def get_closest(origins = [], last = ""):
-    #get furthest origin from destination
+def get_closest(origins = [], last = "", destination = ""):
+
     last_pc = get_postcode(last)
-    closest = 99999999999999999999999999999999999999999999999999999999999999
-    closest_pc = ""
+    d_pc = get_postcode(destination)
+    closest = math.sqrt((float(last_pc.lat) - float(d_pc.lat))**2 + (float(last_pc.long) - float(d_pc.long))**2)
+    closest_pc = destination
     for o in origins:
         o_pc = get_postcode(o)
         dist = math.sqrt((float(last_pc.lat) - float(o_pc.lat))**2 + (float(last_pc.long) - float(o_pc.long))**2)
@@ -179,37 +180,11 @@ def optimise():
         cursor.execute(sql)
         print("===== " + d)
         i = 0
-        sources = []
         combos = []
-        v_w = 0 #vic
-        v_v = 0
-        v_sources = []
-        na_w = 0 #nsw/act
-        na_v = 0
-        na_sources = []
-        q_v = 0
-        q_w = 0
-        q_sources = []
-        s_w = 0
-        s_v = 0
-        s_sources = []
-        w_w = 0
-        w_v =0
-        w_sources = []
-        t_w = 0
-        t_v = 0
-        t_sources = []
-        n_v = 0
-        n_w = 0
-        n_sources = []
-
-        batched_orders_na = []
-        batched_orders_v = []
-        batched_orders_q = []
-        batched_orders_s = []
-        batched_orders_w = []
-        batched_orders_t = []
-        batched_orders_n = []
+        weight = 0 #nsw/act
+        volume = 0
+        sources = []
+        candidate_orders = []
         for o in cursor.fetchall():
             if (str(o) != "(None,)"):
                 sources.append(origins[i])
@@ -221,358 +196,73 @@ def optimise():
         for combo in combos:
             sql = "SELECT * FROM %s" % combo
             cursor.execute(sql)
-            batched_orders = []
+
             for o in cursor.fetchall():
-                if (combo[1] == "2"):
-                    na_w = na_w + (o[1] * o[3])
-                    na_v = na_v + (o[2] * o[3])
-                    w_cap_pct = (na_w / w_cap) * 100
-                    v_cap_pct = (na_v / v_cap) * 100
-                    ord = get_order(o[0])
-                    batched_orders_na.append(ord.order_num)
-                    na_sources.append(ord.from_pcode)
-                    if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(randint(100000, 999999) , batched_orders_na, ord.from_pcode, [], ord.to_pcode)
-                        trucks.append(truck)
 
-                        pickup_order = []
+                weight = weight + (o[1] * o[3])
+                volume = volume + (o[2] * o[3])
+                w_cap_pct = (weight / w_cap) * 100
+                v_cap_pct = (volume / v_cap) * 100
+                ord = get_order(o[0])
+                print("TEST " + ord.order_num)
+                candidate_orders.append(ord.order_num)
 
-                        for i in range(0, len(na_sources)):
-                            last = ""
-                            if i == 0:
-                                start = get_starting_loc(na_sources, d)
-                                print("STARTING LOC: " + get_starting_loc(na_sources, d))
-                                na_sources.remove(start)
-                                pickup_order.append((i + 1, start))
-                                last = start
-                            else:
-                                next = get_closest(na_sources, start)
-                                print("Stop " + str(i) + ": " + next)
-                                na_sources.remove(next)
-                                pickup_order.append((i + 1, next))
+                if (w_cap_pct > 90) or (v_cap_pct > 90):
+                    pickup_order = []
+                    stops = []
 
-                        print("Truck generated for destination: " + d + ". From NSW/ACT. ID: " + str(truck.id))
+                    for i in range(0, len(sources)):
+                        last = ""
+                        if i == 0:
+                            start = get_starting_loc(sources, d)
+                            print("STARTING LOC: " + start)
+                            sources.remove(start)
+                            pickup_order.append((i + 1, start))
+                            stops.append(start)
+                            last = start
+                        else:
+                            next = get_closest(sources, start, d)
+                            print("Stop " + str(i) + ": " + next)
+                            if (next == d):
+                                break
+                            sources.remove(next)
+                            stops.append(next)
+                            pickup_order.append((i + 1, next))
+
+                    print("LEN " + str(len(candidate_orders)))
+                    for co in candidate_orders:
+                        print("Order " + co)
+                        cand = get_order(co)
+                        if cand.from_pcode not in stops:
+                            candidate_orders.remove(co)
+
+
+                    truck = Truck(randint(100000, 999999), candidate_orders, ord.from_pcode, [], ord.to_pcode)
+                    trucks.append(truck)
+                    print("Truck generated for destination: " + d + ". ID: " + str(truck.id))
+                    db.commit()
+                    for o in truck.orders:
+                        print("Order added to truck : " + o)
+                        to_remove = get_order(o)
+                        processed_orders.remove(to_remove)
+                        sql = "DELETE FROM system_state where order_ID = %s " % o
+                        cursor.execute(sql)
+
+                        index = get_pickup_order(pickup_order, to_remove.from_pcode)
+                        sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (o, truck.id, index, to_remove.from_pcode, d, current_time)
+                        cursor.execute(sql)
+
+                        sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                        cursor.execute(sql)
+
+                        sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
+                        cursor.execute(sql)
                         db.commit()
-                        for o in truck.orders:
-                            print("Order added to truck : " + o)
-                            to_remove = get_order(o)
-                            processed_orders.remove(to_remove)
-                            sql = "DELETE FROM system_state where order_ID = %s " % o
-                            cursor.execute(sql)
-
-                            index = get_pickup_order(pickup_order, to_remove.from_pcode)
-                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (o, truck.id, index, to_remove.from_pcode, d, current_time)
-                            cursor.execute(sql)
-
-                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                            cursor.execute(sql)
-
-                            sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
-                            cursor.execute(sql)
-                            db.commit()
-                        na_v = 0
-                        na_w = 0
-                        na_sources = []
-
-                if (combo[1] == "3"):
-                    v_w = v_w + (o[1] * o[3])
-                    v_v = v_v + (o[2] * o[3])
-                    w_cap_pct = (v_w / w_cap) * 100
-                    v_cap_pct = (v_v / v_cap) * 100
-                    ord = get_order(o[0])
-                    batched_orders_v.append(ord.order_num)
-                    v_sources.append(ord.from_pcode)
-
-                    if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(randint(100000, 999999) , batched_orders_v, ord.from_pcode, [], ord.to_pcode)
-                        trucks.append(truck)
-
-                        pickup_order = []
-
-                        for i in range(0, len(v_sources)):
-                            last = ""
-                            if i == 0:
-                                start = get_starting_loc(v_sources, d)
-                                print("STARTING LOC: " + get_starting_loc(v_sources, d))
-                                v_sources.remove(start)
-                                pickup_order.append((i + 1, start))
-                                last = start
-                            else:
-                                next = get_closest(v_sources, start)
-                                print("Stop " + str(i) + ": " + next)
-                                v_sources.remove(next)
-                                pickup_order.append((i + 1, next))
-
-                        print("Truck generated for destination: " + d + ". From VIC. ID: " + str(truck.id))
-                        for o in truck.orders:
-                            print("Order added to truck : " + o)
-                            to_remove = get_order(o)
-                            processed_orders.remove(to_remove)
-                            sql = "DELETE FROM system_state where order_ID = %s " % o
-                            cursor.execute(sql)
-                            db.commit()
-
-                            index = get_pickup_order(pickup_order, to_remove.from_pcode)
-                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (o, truck.id, index, to_remove.from_pcode, d, current_time)
-                            cursor.execute(sql)
-
-                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                            cursor.execute(sql)
-
-                            sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
-                            cursor.execute(sql)
-                            db.commit()
-                        v_v = 0
-                        v_w = 0
-                        v_sources = []
-                if (combo[1] == "4"):
-                    q_w = q_w + (o[1] * o[3])
-                    q_v = q_v + (o[2] * o[3])
-                    w_cap_pct = (q_w / w_cap) * 100
-                    v_cap_pct = (q_v / v_cap) * 100
-                    ord = get_order(o[0])
-                    batched_orders_q.append(ord.order_num)
-                    q_sources.append(ord.from_pcode)
-
-                    if (w_cap_pct > 95) or (v_cap_pct > 95):
-                        truck = Truck(randint(100000, 999999) , batched_orders_q, ord.from_pcode, [], ord.to_pcode)
-                        trucks.append(truck)
-
-                        pickup_order = []
-
-                        for i in range(0, len(q_sources)):
-                            last = ""
-                            if i == 0:
-                                start = get_starting_loc(q_sources, d)
-                                print("STARTING LOC: " + get_starting_loc(q_sources, d))
-                                q_sources.remove(start)
-                                pickup_order.append((i + 1, start))
-                                last = start
-                            else:
-                                next = get_closest(q_sources, start)
-                                print("Stop " + str(i) + ": " + next)
-                                q_sources.remove(next)
-                                pickup_order.append((i+1, next))
-
-                        for o in pickup_order:
-                            print("ORDER : " + str(o))
-
-                        print("Truck generated for destination: " + d + ". From QLD. ID: " + str(truck.id))
-                        for o in truck.orders:
-
-                            print("Order added to truck : " + o)
-                            to_remove = get_order(o)
-                            processed_orders.remove(to_remove)
-                            sql = "DELETE FROM system_state where order_ID = %s " % o
-                            cursor.execute(sql)
-                            db.commit()
-
-                            index = get_pickup_order(pickup_order, to_remove.from_pcode)
-                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (o, truck.id, index, to_remove.from_pcode, d, current_time)
-                            cursor.execute(sql)
-
-                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                            cursor.execute(sql)
-
-                            sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
-                            cursor.execute(sql)
-                            db.commit()
-                        q_v = 0
-                        q_w = 0
-                        q_sources = []
-                if (combo[1] == "5"):
-                    s_w = s_w + (o[1] * o[3])
-                    s_v = s_v + (o[2] * o[3])
-                    w_cap_pct = (s_w / w_cap) * 100
-                    v_cap_pct = (s_v / v_cap) * 100
-                    ord = get_order(o[0])
-                    batched_orders_s.append(ord.order_num)
-                    s_sources.append(ord.from_pcode)
-                    if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(randint(100000, 999999) , batched_orders_s, ord.from_pcode, [], ord.to_pcode)
-                        trucks.append(truck)
-
-                        pickup_order = []
-
-                        for i in range(0, len(s_sources)):
-                            last = ""
-                            if i == 0:
-                                start = get_starting_loc(s_sources, d)
-                                print("STARTING LOC: " + get_starting_loc(s_sources, d))
-                                s_sources.remove(start)
-                                pickup_order.append((i + 1, start))
-                                last = start
-                            else:
-                                next = get_closest(s_sources, start)
-                                print("Stop " + str(i) + ": " + next)
-                                s_sources.remove(next)
-                                pickup_order.append((i + 1, next))
+                    volume = 0
+                    weight = 0
+                    sources = []
 
 
-                        print("Truck generated for destination: " + d + ". From SA. ID: " + str(truck.id))
-                        for o in truck.orders:
-                            print("Order added to truck : " + o)
-                            to_remove = get_order(o)
-                            processed_orders.remove(to_remove)
-                            sql = "DELETE FROM system_state where order_ID = %s " % o
-                            cursor.execute(sql)
-                            db.commit()
-
-                            index = get_pickup_order(pickup_order, to_remove.from_pcode)
-                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (
-                            o, truck.id, index, to_remove.from_pcode, d, current_time)
-                            cursor.execute(sql)
-
-                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                            cursor.execute(sql)
-                            db.commit()
-                        s_v = 0
-                        s_w = 0
-                        s_sources = []
-                if (combo[1] == "6"):
-                    w_w = w_w + (o[1] * o[3])
-                    w_v = w_v + (o[2] * o[3])
-                    w_cap_pct = (w_w / w_cap) * 100
-                    v_cap_pct = (w_v / v_cap) * 100
-                    ord = get_order(o[0])
-                    batched_orders_w.append(ord.order_num)
-                    w_sources.append(ord.from_pcode)
-                    if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(randint(100000, 999999) , batched_orders_w, ord.from_pcode, [], ord.to_pcode)
-                        trucks.append(truck)
-
-                        pickup_order = []
-
-                        for i in range(0, len(w_sources)):
-                            last = ""
-                            if i == 0:
-                                start = get_starting_loc(w_sources, d)
-                                print("STARTING LOC: " + get_starting_loc(w_sources, d))
-                                w_sources.remove(start)
-                                pickup_order.append((i + 1, start))
-                                last = start
-                            else:
-                                next = get_closest(w_sources, start)
-                                print("Stop " + str(i) + ": " + next)
-                                w_sources.remove(next)
-                                pickup_order.append((i + 1, next))
-
-
-                        print("Truck generated for destination: " + d + ". From WA.  ID: " + str(truck.id))
-                        for o in truck.orders:
-                            print("Order added to truck : " + o)
-                            to_remove = get_order(o)
-                            processed_orders.remove(to_remove)
-                            sql = "DELETE FROM system_state where order_ID = %s " % o
-                            cursor.execute(sql)
-                            db.commit()
-
-                            index = get_pickup_order(pickup_order, to_remove.from_pcode)
-                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (
-                            o, truck.id, to_remove.from_pcode, d, current_time)
-                            cursor.execute(sql)
-
-                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                            cursor.execute(sql)
-                            db.commit()
-                        w_v = 0
-                        w_w = 0
-                        w_sources = []
-                if (combo[1] == "7"):
-                    t_w = t_w + (o[1] * o[3])
-                    t_v = t_v + (o[2] * o[3])
-                    w_cap_pct = (t_w / w_cap) * 100
-                    v_cap_pct = (t_v / v_cap) * 100
-                    ord = get_order(o[0])
-                    batched_orders_t.append(ord.order_num)
-                    t_sources.append(ord.from_pcode)
-                    if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(randint(100000, 999999) , batched_orders_t, ord.from_pcode, [], ord.to_pcode)
-                        trucks.append(truck)
-
-                        pickup_order = []
-
-                        for i in range(0, len(t_sources)):
-                            last = ""
-                            if i == 0:
-                                start = get_starting_loc(t_sources, d)
-                                print("STARTING LOC: " + get_starting_loc(t_sources, d))
-                                t_sources.remove(start)
-                                pickup_order.append((i + 1, start))
-                                last = start
-                            else:
-                                next = get_closest(t_sources, start)
-                                print("Stop " + str(i) + ": " + next)
-                                t_sources.remove(next)
-                                pickup_order.append((i + 1, next))
-
-                        print("Truck generated for destination: " + d + ". From TAS.  ID: " + str(truck.id))
-                        for o in truck.orders:
-                            print("Order added to truck : " + o)
-                            to_remove = get_order(o)
-                            processed_orders.remove(to_remove)
-                            sql = "DELETE FROM system_state where order_ID = %s " % o
-                            cursor.execute(sql)
-                            db.commit()
-
-                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (
-                            o, truck.id, index, to_remove.from_pcode, d, current_time)
-                            cursor.execute(sql)
-
-                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                            cursor.execute(sql)
-                            db.commit()
-                        t_v = 0
-                        t_w = 0
-                        t_sources = []
-                if (combo[1] == "0") and (combo[2] == "8"):
-                    n_w = n_w + (o[1] * o[3])
-                    n_v = n_v + (o[2] * o[3])
-                    w_cap_pct = (n_w / w_cap) * 100
-                    v_cap_pct = (n_v / v_cap) * 100
-                    ord = get_order(o[0])
-                    batched_orders_n.append(ord.order_num)
-                    n_sources.append(ord.from_pcode)
-                    if (w_cap_pct > 90) or (v_cap_pct > 90):
-                        truck = Truck(randint(100000, 9999999) , batched_orders_n, ord.from_pcode, [], ord.to_pcode)
-                        trucks.append(truck)
-
-                        pickup_order = []
-
-                        for i in range(0, len(n_sources)):
-                            last = ""
-                            if i == 0:
-                                start = get_starting_loc(n_sources, d)
-                                print("STARTING LOC: " + get_starting_loc(n_sources, d))
-                                n_sources.remove(start)
-                                pickup_order.append((i + 1, start))
-                                last = start
-                            else:
-                                next = get_closest(n_sources, start)
-                                print("Stop " + str(i) + ": " + next)
-                                n_sources.remove(next)
-                                pickup_order.append((i + 1, next))
-
-                        print("Truck generated for destination: " + d + ". From NT. ID: " + str(truck.id))
-                        for o in truck.orders:
-                            print("Order added to truck : " + o)
-                            to_remove = get_order(o)
-                            processed_orders.remove(to_remove)
-                            sql = "DELETE FROM system_state where order_ID = %s " % o
-                            cursor.execute(sql)
-                            db.commit()
-
-                            index = get_pickup_order(pickup_order, to_remove.from_pcode)
-                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (o, truck.id, index, to_remove.from_pcode, d, current_time)
-                            print(sql)
-                            cursor.execute(sql)
-
-                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                            cursor.execute(sql)
-                            db.commit()
-                        n_v = 0
-                        n_w = 0
-                        n_sources = []
 
             # if (origins[i][0] == d[0]) and (origins[i] in sources):
             # print("same state")
