@@ -3,7 +3,7 @@
 **Author: Hugh Neerhut**
 
 
-This document is designed to assist operators in using the Cleaner Logistics route planner. It will contain an overview of how the system works, troubleshooting steps and reference material. 
+This document is designed to assist operators in using the Cleaner Logistics route planner. It contains an overview of how the system works, troubleshooting steps and reference material. 
 
 
 # Database
