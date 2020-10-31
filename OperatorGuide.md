@@ -54,6 +54,8 @@ Currently the only way to input data into our system is via CSV. The CSV file mu
 
 |OrderID|Datetime|DestinationSuburb|DestinationState|DestinationPostcode|OriginSurburb|OriginState|OriginPostcode| Quantity|Weight|Volume|
 
+replace'|' with comma ','
+
 **The CSV file must be named 'datafile.csv'** and placed in the root directory. 
 
 A list of every Australian postcode with latitude and longitude is also contained in the root directory named 'postcodes.csv'. This list is currently valid, however it may need to be updated in the future due to new suburbs existing. 
