@@ -29,7 +29,9 @@ cursor.execute("CREATE TABLE batched (orderID INT, truckID INT, pickupIndex INT,
 cursor.execute("DROP TABLE IF EXISTS processed")
 cursor.execute("CREATE TABLE processed (orderID INT, origin INT, destination INT, weight FLOAT, volume FLOAT, qty INT, status VARCHAR(20), truckID INT, created DATETIME)")
 db.commit()
-# Step 1. Import delivery order list from CSV into an array
+
+
+#Import delivery order list from CSV into an array
 orders = []
 postcodes = []
 trucks = []
@@ -107,12 +109,7 @@ total_orders = len(orders)  # total number of orders
 w_cap = 20000 #Max truck volume set to 20 tonnes
 v_cap = 69.08 #Max truck volume set to 69m^3
 
-#This function provides the optimisation. It is executed every 10 minutes.
-def optimise():
-    global current_time
-    new_orders = [] #List to store new orders from the last 10 minutes
-    print(current_time)
-
+def process_orders(new_orders= []):
     for o in orders:
         order_datetime = pd.to_datetime(o.ordered_date, dayfirst=True)
         #Get all orders from the last 10 minutes / 600 secs
@@ -143,8 +140,16 @@ def optimise():
             if o.from_pcode not in origins:
                 origins.append(o.from_pcode)
 
-    combos = [] #List to store origin/destination combos.
 
+#This function provides the optimisation. It is executed every 10 minutes.
+def optimise():
+    global current_time
+    new_orders = [] #List to store new orders from the last 10 minutes
+    print(current_time)
+
+    process_orders(new_orders)
+
+    combos = [] #List to store origin/destination combos.
     #Fill matrix and delivery tables
     cursor.execute("TRUNCATE TABLE src_des_matrix") #reset matrix table
     for src in origins:
@@ -196,7 +201,6 @@ def optimise():
         cursor.execute(sql)
 
         print("===== " + d)
-
         combos = []
         weight = 0
         volume = 0
@@ -262,22 +266,24 @@ def optimise():
                     print("Truck generated for destination: " + d + ". ID: " + str(truck.id))
                     db.commit()
                     for o in truck.orders:
-                        print("Order added to truck : " + o)
-                        to_remove = get_order(o)
-                        processed_orders.remove(to_remove)
-                        sql = "DELETE FROM system_state where order_ID = %s " % o
-                        cursor.execute(sql)
+                        dispatched_order = get_order(o)
+                        index = get_pickup_order(pickup_order, dispatched_order.from_pcode)
 
-                        index = get_pickup_order(pickup_order, to_remove.from_pcode)
-                        sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (o, truck.id, index, to_remove.from_pcode, d, current_time)
-                        cursor.execute(sql)
+                        if (index is not None):
+                            print("Order added to truck : " + o)
+                            processed_orders.remove(dispatched_order)
+                            sql = "DELETE FROM system_state where order_ID = %s " % o
+                            cursor.execute(sql)
 
-                        sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
-                        cursor.execute(sql)
+                            sql = "INSERT INTO batched (orderID, truckID, pickupIndex, origin, destination, created) VALUES (%s, %s, %s, %s, %s, '%s')" % (o, truck.id, index, dispatched_order.from_pcode, d, current_time)
+                            cursor.execute(sql)
 
-                        sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
-                        cursor.execute(sql)
-                        db.commit()
+                            sql = "DELETE FROM {} where order_id = {}".format(combo, str(o))
+                            cursor.execute(sql)
+
+                            sql = "UPDATE processed SET status='BATCHED', truckID = %s WHERE orderID = %s" % (truck.id, o)
+                            cursor.execute(sql)
+                            db.commit()
                     volume = 0
                     weight = 0
                     sources = []
@@ -286,7 +292,7 @@ def optimise():
     new_orders.clear()
 
 #optimise is running at every 10 seconds for troubleshooting purposes
-schedule.every(5).seconds.do(optimise)
+schedule.every(10).seconds.do(optimise)
 cycles = cycles + 1
 
 while 1:
