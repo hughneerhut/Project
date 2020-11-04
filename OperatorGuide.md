@@ -1,9 +1,10 @@
+
 # 14 - Data-driven Operation Research for Cleaner Logistics
 
 **Author: Hugh Neerhut**
 
 
-This document is designed to assist operators in using the Cleaner Logistics route planner. It will contain an overview of how the system works, troubleshooting steps and reference material. 
+This document is designed to assist operators in using the Cleaner Logistics route planner. It contains an overview of how the system works, troubleshooting steps and reference material. 
 
 
 # Database
@@ -54,6 +55,8 @@ Currently the only way to input data into our system is via CSV. The CSV file mu
 
 |OrderID|Datetime|DestinationSuburb|DestinationState|DestinationPostcode|OriginSurburb|OriginState|OriginPostcode| Quantity|Weight|Volume|
 
+replace'|' with comma ','
+
 **The CSV file must be named 'datafile.csv'** and placed in the root directory. 
 
 A list of every Australian postcode with latitude and longitude is also contained in the root directory named 'postcodes.csv'. This list is currently valid, however it may need to be updated in the future due to new suburbs existing. 
@@ -61,4 +64,57 @@ A list of every Australian postcode with latitude and longitude is also containe
 
 # Optimisation
 
-Optimisation occurs every 10 minutes. During this process all the new orders from the last 10 minutes are added to the system for processing. Once the orders have been processed, the system optimises trucking routes by using the src_des_matrix table to find orders bound to a particular destination. If the accumulated weight or volume of all orders bound to this postcode is over 90% of the trucks capacity (**default weight 20tonnes, volume 69m^3)** a batch will be created. The order of the pickup for each batch is calculated using GPS coordinates and an altered version of Pythagoras' theorem. The origin destination furthest from the destination will always be the first pickup location. It will then iterate through all other origins and find the next closest one for the next pickup. This ensures trucks travel minimal distance between each pickup. 
+Optimisation occurs every 10 minutes. During this process all the new orders from the last 10 minutes are added to the system for processing. Once the orders have been processed, the system optimises trucking routes by using the src_des_matrix table to find orders bound to a particular destination. If the accumulated weight or volume of all orders bound to this postcode is over 90% of the trucks capacity (**default weight 20tonnes, volume 69m^3)** a batch will be created. 
+The order of the pickup for each batch is calculated using GPS coordinates and an altered version of Pythagoras' theorem. The origin destination furthest from the destination will always be the first pickup location. It will then iterate through all other origins and find the next closest one for the next pickup. This ensures trucks travel minimal distance between each pickup. 
+
+## Main.py
+
+This is the main python class that contains the executable code for optimisation. It consists of the following functions:
+
+**optimise()**: This function contains the logic for optimisation. It is executed every 10 minutes by the Python event scheduler. All the system logic and algorithm is contained within this function. 
+**process_orders(new_orders[])**: This function processes a list of new orders from the last 10 minutes and adds them to the database tables and lists (system_state, src_des_matrix, o----d----). See database section for more info. 
+**get_order(orderID)**: This function returns an order object for a given order ID. It searches a list of all orders until it finds the requested order ID. See Order.py for object info.
+**get_postcode(postcode)**: This function returns a postcode object containing GPS coordinates for a given postcode. See Postcode.py for object info. 
+**get_starting_loc(origins[], destination)**: This function calculates and returns the starting postcode for a batch of orders. It iterates through a list of origins until it finds the origin furthest away from the destination postcode. This is achieved with Pythagoras' theorem. 
+**get_closest(origins[], last, destination)**: This function calculates and returns the next pickup location for a truck. It iterates through a list of possible pickup locations/origins and finds the nearest origin to the last pickup location. If the next closest location is the destination, it exits the function and returns the destination postcode. 
+**get_pickup_order(tuple[], postcode)**: This function returns the pickup order for a tuple value. 
+
+## Order.py
+
+This class defines 'order' objects. **Attributes:**
+
+- order_num
+- ordered_date
+- from_suburb
+- from_state
+- from_postcode
+- to_suburb
+- to_state
+- to_postcode
+- item_qty
+- volume
+- weight
+
+**Each attribute has an associated setter and getter function**
+
+## Postcode.py
+
+This class defines 'postcode' objects which includes GPS coordinates. **Attributes:**
+
+- postcode
+- long
+- lat
+
+**Each attribute has an associated setter and getter function**
+
+## Truck.py
+
+This class defines 'truck' objects **Attributes:**
+
+- id
+- orders
+- origin
+- stops
+- destination
+
+**Each attribute has an associated setter and getter function**
